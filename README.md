@@ -5,6 +5,7 @@ Not affiliated with Autodesk!
 ##Status:
 Well, it opens files.
 GUI is sort of OK (through tkinter).
+Current GUI: https://media.giphy.com/media/1rPVom2mOaRGV2nNMG/giphy.gif
 
 ##TODO (in prioritized order):
 - Editing/saving options (Doh!)
