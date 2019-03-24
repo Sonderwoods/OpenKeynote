@@ -63,9 +63,18 @@ def changeselection(self):
     # root.update()
 
 def edititem(self):
+    """
+    copies text from e1 to e2
+    """
     e2.delete("1.0", END)
     e2.insert(END, e1.get("1.0", END))
 
+def saveitem(self):
+    """
+    saves text from gui back into main dictionary
+    and redraws tree, and selects where we were.
+    """
+    pass
 ###SETUP GUI
 root = Tk()
 
