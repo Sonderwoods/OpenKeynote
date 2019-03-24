@@ -7,7 +7,7 @@ from tkinter import ttk
 
 ## Folder setups
 folder = r"C:/Users/MANI/py"
-filename = "1548_Uppsala_Stadshus_Keynotes.TXT"
+filename = "MYKEYNOTEFILE.TXT"
 fpath = folder + "/" + filename
 bkfolder = "/KNOTE_backups/"
 
