@@ -9,6 +9,8 @@ Current GUI: https://media.giphy.com/media/1rPVom2mOaRGV2nNMG/giphy.gif
 
 ##TODO (in prioritized order):
 - Editing/saving options (Doh!)
+- Picking which file to open through commandpromt or a GUI file selection.
+  (the first one can be run from directly inside revit!)
 - Encoding/regional characters not testet yet (works on a Scandinavian file so far).
 - Filtering by keywords and alphabetical ordering.
 - Using/Reusing descriptions from central buildup files?
