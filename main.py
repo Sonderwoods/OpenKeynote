@@ -11,6 +11,8 @@ filename = "MYKEYNOTEFILE.TXT"
 fpath = folder + "/" + filename
 bkfolder = "/KNOTE_backups/"
 
+
+
 def fixUI():
     """
     Resizes with 1 pixel to avoid mainUI bugs in mojave
@@ -86,6 +88,7 @@ sb1 = Button(root, text="X", width = 3)
 sb1.grid(row = 0, column = 1)
 sb2 = Button(root, text="X", width = 3)
 sb2.grid(row = 0, column = 2)
+#
 
 
 #Setup treebar and scroll
