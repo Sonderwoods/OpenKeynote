@@ -2,12 +2,12 @@
 An open source editor for Autodesk Revit(TM) keynote files.
 Not affiliated with Autodesk!
 
-##Status:
+## Status:
 Well, it opens files.
 GUI is sort of OK (through tkinter).
 Current GUI: https://media.giphy.com/media/1rPVom2mOaRGV2nNMG/giphy.gif
 
-##TODO (in prioritized order):
+## TODO (in prioritized order):
 - Editing/saving options (Doh!)
 - Picking which file to open through commandpromt or a GUI file selection.
   (the first one can be run from directly inside revit!)
