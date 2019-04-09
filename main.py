@@ -6,8 +6,10 @@ from tkinter import ttk
 
 # Folder setups
 folder = r"C:/Users/MANI/py"
+folder = "/Users/msn/Dropbox/py/Git/OpenKeynote"
 filename = "MYKEYNOTEFILE.TXT"
 fpath = folder + "/" + filename
+
 bkfolder = "/KNOTE_backups/"
 
 
@@ -30,12 +32,16 @@ def createbackup():
         os.mkdir(bkfolder)
     except OSError:
         pass
-    copyfile(fpath, folder + bkfolder + filename + "_" + mytime)
+    try:
+        copyfile(fpath, folder + bkfolder + filename + "_" + mytime)
+    except FileNotFoundError as e:
+        print("Can't create backup folder!! (Error code: {} )".format(e))
 
 
 lengths = []
 rawdata = []
-currentitem = ""
+previeweditem = ""
+editeditem = ""
 with open(fpath, "rb") as f:
     chars = f.read()
     for i in chars.split(b"\r"):
@@ -49,17 +55,17 @@ def changeselection(self):
     """
     what happens when changing selection in the treeview..
     """
-    global currentitem
+    global previeweditem
     e1.config(state=NORMAL)
     itemname = l1.focus()
-    currentitem = l1.focus()
+    previeweditem = l1.focus()
     parentname = [i["parent"] for i in itemlist if i["name"] == itemname][0]
     index = [i for i, j in enumerate(itemlist) if j["name"] == itemname][0]
     if len(parentname) > 1:
-        tx1.config(text="editing: {} ( parent: {} )".format(
+        tx1.config(text="previewing: {} ( parent: {} )".format(
             itemname, parentname))
     else:
-        tx1.config(text="editing: {}".format(itemname))
+        tx1.config(text="previewing: {}".format(itemname))
     # #tx1.config(text="editing: " + items[index].split("\t")[0])
     e1.delete("1.0", END)
     e1.insert(END, itemlist[index]["content"])
@@ -77,6 +83,19 @@ def edititem(self):
     e2.delete("1.0", END)
     e2.insert(END, e1.get("1.0", END))
 
+    global previeweditem
+    global editeditem
+
+    editeditem = previeweditem
+    itemname = editeditem
+    parentname = [i["parent"] for i in itemlist if i["name"] == itemname][0]
+    index = [i for i, j in enumerate(itemlist) if j["name"] == itemname][0]
+    if len(parentname) > 1:
+        tx2.config(text="Editing: {} ( parent: {} )".format(
+            itemname, parentname))
+    else:
+        tx2.config(text="Editing: {}".format(itemname))
+
 
 def saveitem(self):
     """
@@ -87,17 +106,19 @@ def saveitem(self):
     3) select active item
     """
     global itemlist
+    global editeditem
     # update Dictionary
     newcontent = e2.get("1.0", END)
-    for i in itemlist:
-        # if i["name"] ==
-        print(i)
+    for i,k in enumerate(itemlist):
+        if k["name"] == editeditem:
+            itemlist[i]["content"] = newcontent
 
     # update e1 and e2
     e1.config(state=NORMAL)
     e1.delete("1.0", END)
     e1.insert(END, newcontent)
     e1.config(state=DISABLED)
+
 
 
 # SETUP GUI
@@ -147,24 +168,27 @@ vb9 = Button(root, text="9")
 vb9.grid(row=9, column=3)
 
 # label
-tx1 = Label(root, text="Editing", width=50)
+tx1 = Label(root, text="Preview", width=50)
 tx1.grid(row=0, column=4, columnspan=3)
+
+tx2 = Label(root, text="Editing", width=50)
+tx2.grid(row=5, column=4)
 
 # e1 = Entry(root, textvariable=entryString, width=75)
 e1 = Text(root, height=14, width=84)
 e1.config(state=NORMAL, padx=10, pady=10)
-e1.grid(row=1, column=4, columnspan=3, rowspan=4)
+e1.grid(row=1, column=4, columnspan=4, rowspan=4)
 
 e2 = Text(root, height=14, width=84)
 e2.config(state=NORMAL)
-e2.grid(row=6, column=4, columnspan=3, rowspan=4)
+e2.grid(row=6, column=4, columnspan=4, rowspan=4)
 
 
-vb1 = Button(root, text="Edit", width=40)
-vb1.grid(row=5, column=4)
+vb1 = Button(root, text="Edit", width=20)
+vb1.grid(row=5, column=5)
 vb1.bind("<ButtonRelease-1>", edititem)
-vb2 = Button(root, text="Save", width=40)
-vb2.grid(row=5, column=5)
+vb2 = Button(root, text="Save", width=20)
+vb2.grid(row=5, column=6)
 vb2.bind("<ButtonRelease-1>", saveitem)
 
 
