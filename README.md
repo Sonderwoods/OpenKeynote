@@ -17,7 +17,7 @@ Current GUI: https://media.giphy.com/media/1rPVom2mOaRGV2nNMG/giphy.gif
 - Collapse all
 - Generally I'm open for all pythonic PEP inputs. This is my learning project!
 
-Hours spent so far: 10
+Hours spent so far: 11
 
 Read more about keynotes here:
 https://knowledge.autodesk.com/support/revit-products/learn-explore/caas/CloudHelp/cloudhelp/2019/ENU/Revit-DocumentPresent/files/GUID-99AE9D3E-3326-4F21-ADC5-303F2E1A2135-htm.html
