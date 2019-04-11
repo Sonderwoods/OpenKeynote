@@ -43,10 +43,11 @@ def createbackup(folder, filename, bkfolder):
     except FileNotFoundError as e:
         print("Can't create backup!! (Error code: {} )".format(e))
 
-lengths = []
 previeweditem = ""
 editeditem = ""
+
 def getlengths(fpath):
+    lengths = []
     with open(fpath, "rb") as f:
         chars = f.read()
         for i in chars.split(b"\r"):
@@ -117,20 +118,32 @@ def saveitem(self):
 def savefile(self):
     """
     Saves file! WIP
-    """
+
     with open(folder + "/" + "KEYTESTout.txt", mode="wb") as f:
         for s in [1,2,3]:
             x = str(s)
             #print(x, file=f)
-            print("test\n")
+            string = "test\n"
+            b = bytes(string, 'utf-8')
+            print(b, file=f)
             print(b"\r".decode("utf-8"), file=f)
+    """
+    with open(folder + "/" + "KEYTESTout.txt", 'wb') as f:
+        for item in itemlist:
+            f.write(bytes(item["name"], "utf-8"))
+            f.write(b"\t")
+            f.write(bytes(item["content"], "utf-8"))
+            f.write(b"\t")
+            f.write(bytes(item["parent"], "utf-8"))
+            f.write(b"\r")
 
 # SETUP GUI
 root = Tk()
 
-sf1 = Text(root, height=1, width=17).grid(row=0, column=0)
-sb1 = Button(root, text="SAVEFILE", width=3)
-sb1.grid(row=0, column=1)
+sf1 = Text(root, height=1, width=17)
+sf1.grid(row=0, column=0)
+sb1 = Button(root, text="SAVEFILE", width=15)
+sb1.grid(row=0, column=0)
 sb1.bind("<ButtonRelease-1>", savefile)
 sb2 = Button(root, text="X", width=3)
 sb2.grid(row=0, column=2)
@@ -148,7 +161,7 @@ l1.bind("<ButtonRelease-1>", changeselection)
 vbs = [] # Vertical bar
 for a in range(10):
     vbs.append(Button(root, text=str(a)))
-    vbs[a].grid(row=int(a), column=3)
+    vbs[a].grid(row=int(a)+1, column=3)
 
 # label
 tx1 = Label(root, text="Preview", width=50)
