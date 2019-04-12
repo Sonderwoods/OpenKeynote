@@ -5,16 +5,20 @@ from tkinter import *
 from tkinter import ttk
 import sys
 
-#filepaths
+# filepaths
 fpath = "/Users/msn/Dropbox/py/Git/OpenKeynote/MYKEYNOTEFILE.TXT"
+fpath = r"C:\Users\MANI\py\MYKEYNOTEFILE.TXT"
+fpath = fpath.replace("\\", "/")
 folder = "/".join(fpath.split("/")[:-1])
+
 filename = fpath.split("/")[-1]
 bkfolder = folder + "/KNOTE_backups"
 
-#overrules premade filepath with cmd prompt input.
+# overrules premade filepath with cmd prompt input.
 args = sys.argv
 if len(sys.argv) > 1:
     fpath = sys.argv[-1]
+
 
 def fixUI():
     """
@@ -26,6 +30,7 @@ def fixUI():
     h = int(b[1])
     root.geometry('%dx%d' % (w+1, h+1))
 
+
 def createbackup(folder, filename, bkfolder):
     """
     Backups your file into a backupfolder
@@ -34,7 +39,7 @@ def createbackup(folder, filename, bkfolder):
     try:
         os.mkdir(bkfolder)
     except OSError:
-        #folder already exists
+        # folder already exists
         pass
     try:
         filefirstname = ".".join(filename.split(".")[:-1])
@@ -43,8 +48,10 @@ def createbackup(folder, filename, bkfolder):
     except FileNotFoundError as e:
         print("Can't create backup!! (Error code: {} )".format(e))
 
+
 previeweditem = ""
 editeditem = ""
+
 
 def getlengths(fpath):
     lengths = []
@@ -54,6 +61,7 @@ def getlengths(fpath):
             number = int(len(i)/2)
             lengths.append(number)
     return lengths
+
 
 def changeselection(self):
     """
@@ -95,6 +103,7 @@ def edititem(self):
     else:
         tx2.config(text="Editing: {}".format(itemname))
 
+
 def saveitem(self):
     """
     saves text from gui back into main dictionary
@@ -107,14 +116,16 @@ def saveitem(self):
     global previeweditem
 
     newcontent = e2.get("1.0", END)
-    for i,k in enumerate(itemlist):    # update Dictionary
+    for i, k in enumerate(itemlist):    # update Dictionary
         if k["name"] == editeditem:
             itemlist[i]["content"] = newcontent
     if previeweditem == editeditem:
         e1.delete("1.0", END)
         e1.insert(END, newcontent)
 
-#WIP
+# WIP
+
+
 def savefile(self):
     """
     Saves file! WIP
@@ -137,6 +148,7 @@ def savefile(self):
             f.write(bytes(item["parent"], "utf-8"))
             f.write(b"\r")
 
+
 # SETUP GUI
 root = Tk()
 
@@ -158,7 +170,7 @@ l1.grid(row=1, column=0, rowspan=9, columnspan=3, sticky=N+S+E)
 yscroll.grid(row=1, column=0, rowspan=9, columnspan=3, sticky=N+S+E)
 l1.bind("<ButtonRelease-1>", changeselection)
 
-vbs = [] # Vertical bar
+vbs = []  # Vertical bar
 for a in range(10):
     vbs.append(Button(root, text=str(a)))
     vbs[a].grid(row=int(a)+1, column=3)
@@ -170,11 +182,11 @@ tx2 = Label(root, text="Editing", width=50)
 tx2.grid(row=5, column=4)
 
 e1 = Text(root, height=14, width=84, fg="#555", font=("Courier", 15),
-    padx=10, pady=10)
+          padx=10, pady=10)
 e1.grid(row=1, column=4, columnspan=4, rowspan=4)
 
 e2 = Text(root, height=14, width=84, font=("Courier", 15), borderwidth=3,
-    relief="solid")
+          relief="solid")
 e2.grid(row=6, column=4, columnspan=4, rowspan=4)
 
 vb1 = Button(root, text="Edit", width=20)
@@ -187,6 +199,7 @@ vb2.bind("<ButtonRelease-1>", saveitem)
 itemlist = []
 createbackup(folder, filename, bkfolder)
 lengths = getlengths(fpath)
+
 
 def readfile(fpath):
     with open(fpath, "r", encoding="utf-16") as f:
@@ -209,11 +222,13 @@ def readfile(fpath):
                 parent = chunk[1:].strip().split("\t")[2]
             except:
                 parent = ""
-            itemlist.append({"name": name, "content": content, "parent": parent})
+            itemlist.append(
+                {"name": name, "content": content, "parent": parent})
     return itemlist
 
+
 itemlist = readfile(fpath)
-templist = itemlist[:] #local copy
+templist = itemlist[:]  # local copy
 uniquenames = set()
 
 while len(templist) > 0:
