@@ -199,12 +199,12 @@ yscroll.config(width=20)
 l1['yscrollcommand'] = yscroll.set
 yscroll['command'] = l1.yview
 l1.grid(row=1, column=0, columnspan=3,  padx=(
-    40), pady=(10), sticky=N+S+E+W)
+    30), pady=(10), sticky=N+S+E+W)
 yscroll.grid(row=1, column=0, columnspan=3, sticky=N+S+E)
 l1.bind("<ButtonRelease-1>", changeselection)
 
 frame_left.rowconfigure(1, weight=1)
-frame_left.columnconfigure(1, weight=1)
+frame_left.columnconfigure(0, weight=1)
 
 vbs = []  # Vertical bar
 for a in range(10):
@@ -232,6 +232,9 @@ vb1.bind("<ButtonRelease-1>", edititem)
 vb2 = Button(frame_right, text="Save", width=20)
 vb2.grid(row=2, column=2)
 vb2.bind("<ButtonRelease-1>", saveitem)
+
+frame_right.rowconfigure(0, weight=1)
+frame_right.rowconfigure(1, weight=1)
 
 itemlist = []
 createbackup(folder, filename, bkfolder)
@@ -283,6 +286,7 @@ while len(templist) > 0:
 
 def resizeui(self):
     print("newsize")
+    print(frame_left.winfo_width())
 
 
 root.columnconfigure(2, weight=1)
