@@ -5,19 +5,26 @@ from tkinter import *
 from tkinter import ttk
 import sys
 
+# OpenKeynote
+# Copyright Mathias Sønderskov Nielsen 2019
+
 # sharp fonts in high res (https://stackoverflow.com/questions/41315873/
 # attempting-to-resolve-blurred-tkinter-text-scaling-on-windows-10-high-dpi-disp)
 if os.name == "nt":
     from ctypes import windll, pointer, wintypes
+    fpath = r"C:\Users\MANI\py\MYKEYNOTEFILE.TXT"
     try:
         windll.shcore.SetProcessDpiAwareness(1)
     except Exception:
         pass  # this will fail on Windows Server and maybe early Windows
+else:
+    fpath = "/Users/msn/Dropbox/py/Git/OpenKeynote/MYKEYNOTEFILE.TXT"
+
 
 
 # filepaths
-fpath = "/Users/msn/Dropbox/py/Git/OpenKeynote/MYKEYNOTEFILE.TXT"
-fpath = r"C:\Users\MANI\py\MYKEYNOTEFILE.TXT"
+# fpath = "/Users/msn/Dropbox/py/Git/OpenKeynote/MYKEYNOTEFILE.TXT"
+# fpath = r"C:\Users\MANI\py\MYKEYNOTEFILE.TXT"
 fpath = fpath.replace("\\", "/")
 folder = "/".join(fpath.split("/")[:-1])
 
@@ -186,13 +193,14 @@ pw.add(pane_right)
 frame_left = Frame(pane_left)
 frame_left.pack(fill=BOTH, expand=1)
 frame_center = Frame(pane_right)
-frame_center.grid(row=0, column=0, sticky=E+W+N+S)
-frame_right = Frame(pane_right)
-frame_right.grid(row=0, column=1, sticky=E+W+N+S)
+frame_center.grid(row=0, column=0, sticky=W+N, rowspan=4)
+frame_right = Frame(pane_right, borderwidth=5, relief="solid" )
+frame_right.grid(row=0, column=1, sticky=W+E+N+S)
 
-sf1 = Text(frame_left, height=1, width=17)
+sf1 = Text(frame_left, height=1, width=12, borderwidth=2, relief="solid",
+        highlightthickness=0)
 sf1.grid(row=0, column=0)
-sb1 = Button(frame_left, text="SAVEFILE", width=15)
+sb1 = Button(frame_left, text="SAVEFILE", width=10)
 sb1.grid(row=0, column=1)
 sb1.bind("<ButtonRelease-1>", savefile)
 sb2 = Button(frame_left, text="X", width=3)
@@ -201,7 +209,7 @@ sb2.grid(row=0, column=2)
 # Setup treebar and scroll
 l1 = ttk.Treeview(frame_left)
 yscroll = Scrollbar(frame_left, orient=VERTICAL)
-yscroll.config(width=20)
+yscroll.config(width=10)
 l1['yscrollcommand'] = yscroll.set
 yscroll['command'] = l1.yview
 l1.grid(row=1, column=0, columnspan=3,  padx=(
@@ -211,37 +219,46 @@ l1.bind("<ButtonRelease-1>", changeselection)
 
 frame_left.rowconfigure(1, weight=1)
 frame_left.columnconfigure(0, weight=1)
+frame_left.columnconfigure(1, weight=1)
+
+
+
 
 vbs = []  # Vertical bar
-middlebuttons = ("Up", "Down", "<-", "New", "Delete", "Rename", "Parent")
+middlebuttons = ("Up","Down", "<-", "New", "New Sub", "Delete", "Rename", "Parent")
 for a, button_text in enumerate(middlebuttons):
     vbs.append(Button(frame_center, text=button_text))
     vbs[a].pack(fill=BOTH)
     # vbs[a].grid(row=int(a)+1)
 
 # label
-tx1 = Label(frame_right, text="Preview", width=50)
+tx1 = Label(frame_right, text="Preview")
 tx1.grid(row=0, column=0, columnspan=3)
-tx2 = Label(frame_right, text="Editing", width=50)
+tx2 = Label(frame_right, text="Editing")
 tx2.grid(row=2, column=0)
 
 e1 = Text(frame_right, fg="#555", font=("Courier", 15),
-          padx=10, pady=10)
-e1.grid(row=1, column=0, columnspan=3)
+          padx=10, pady=10, highlightthickness=0, borderwidth=1, relief="solid")
+e1.grid(row=1, column=0, columnspan=3, sticky=N+S+E+W)
 
 e2 = Text(frame_right, font=("Courier", 15), borderwidth=3,
-          relief="solid", padx=10, pady=10)
-e2.grid(row=3, column=0, columnspan=3)
+          relief="solid", padx=10, pady=10, highlightthickness=0)
+e2.grid(row=3, column=0, columnspan=3, sticky=N+S+E+W)
 
-vb1 = Button(frame_right, text="Edit", width=20)
+
+
+vb1 = Button(frame_right, text="Edit")
 vb1.grid(row=2, column=1)
 vb1.bind("<ButtonRelease-1>", edititem)
-vb2 = Button(frame_right, text="Save", width=20)
+vb2 = Button(frame_right, text="Save")
 vb2.grid(row=2, column=2)
 vb2.bind("<ButtonRelease-1>", saveitem)
 
 frame_right.rowconfigure(0, weight=1)
-frame_right.rowconfigure(1, weight=1)
+frame_right.rowconfigure(1, weight=2)
+frame_right.rowconfigure(2, weight=1)
+frame_right.rowconfigure(3, weight=1)
+frame_right.columnconfigure(1, weight=1)
 
 itemlist = []
 createbackup(folder, filename, bkfolder)
@@ -293,24 +310,16 @@ while len(templist) > 0:
 
 def resizeui(self):
     print("newsize")
-    print(frame_left.winfo_width())
-    frame_left['width'] = root.winfo_width() / 2
-    # root.update()
 
 
-def selectup(self):
-    print("up function")
-
-
-root.columnconfigure(2, weight=1)
+#root.columnconfigure(1, weight=1)
 # root.rowconfigure(1, weight=1)
-root.bind("<Up>", changeselection)
-root.bind("<Down>", changeselection)
-root.bind("<Enter>", changeselection)
+for i in "Up,Down,Enter,Left".split(","):
+    root.bind("<"+i+">", changeselection)
 
 root.bind("<Configure>", resizeui)
-width = 1000
-height = 500
+width = 1200
+height = 800
 root.winfo_width()
 root.winfo_height()
 x = (root.winfo_screenwidth() // 2) - (width // 2)
