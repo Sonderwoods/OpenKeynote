@@ -81,8 +81,13 @@ def changeselection(self):
 
     itemname = l1.focus()
     previeweditem = l1.focus()
-    parentname = [i["parent"] for i in itemlist if i["name"] == itemname][0]
-    index = [i for i, j in enumerate(itemlist) if j["name"] == itemname][0]
+    try:
+        parentname = [i["parent"]
+                      for i in itemlist if i["name"] == itemname][0]
+        index = [i for i, j in enumerate(itemlist) if j["name"] == itemname][0]
+    except:
+        parentname = itemlist[0]["name"]
+        index = 0
     if len(parentname) > 1:
         tx1.config(text="previewing: {} ( parent: {} )".format(
             itemname, parentname))
@@ -162,19 +167,20 @@ def savefile(self):
 # SETUP GUI
 root = Tk()
 
+
 pw = PanedWindow(root, orient=HORIZONTAL)
 
 pw.pack(fill=BOTH, expand=1)
 
 pane_left = Frame(root)
 pw.add(pane_left)
-#pane_left.grid(row=0, column=0, sticky=E+W+N+S)
-#pane_left.rowconfigure(1, weight=1)
-#pane_left.columnconfigure(1, weight=1)
+# pane_left.grid(row=0, column=0, sticky=E+W+N+S)
+# pane_left.rowconfigure(1, weight=1)
+# pane_left.columnconfigure(1, weight=1)
 
 
 pane_right = Frame(root)
-#pane_right.grid(row=0, column=2, sticky=E+W+N+S)
+# pane_right.grid(row=0, column=2, sticky=E+W+N+S)
 pw.add(pane_right)
 
 frame_left = Frame(pane_left)
@@ -207,8 +213,9 @@ frame_left.rowconfigure(1, weight=1)
 frame_left.columnconfigure(0, weight=1)
 
 vbs = []  # Vertical bar
-for a in range(10):
-    vbs.append(Button(frame_center, text=str(a)))
+middlebuttons = ("Up", "Down", "<-", "New", "Delete", "Rename", "Parent")
+for a, button_text in enumerate(middlebuttons):
+    vbs.append(Button(frame_center, text=button_text))
     vbs[a].pack(fill=BOTH)
     # vbs[a].grid(row=int(a)+1)
 
@@ -287,11 +294,19 @@ while len(templist) > 0:
 def resizeui(self):
     print("newsize")
     print(frame_left.winfo_width())
+    frame_left['width'] = root.winfo_width() / 2
+    # root.update()
+
+
+def selectup(self):
+    print("up function")
 
 
 root.columnconfigure(2, weight=1)
-#root.rowconfigure(1, weight=1)
-
+# root.rowconfigure(1, weight=1)
+root.bind("<Up>", changeselection)
+root.bind("<Down>", changeselection)
+root.bind("<Enter>", changeselection)
 
 root.bind("<Configure>", resizeui)
 width = 1000
