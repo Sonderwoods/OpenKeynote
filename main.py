@@ -3,45 +3,29 @@ from datetime import datetime
 import os
 from tkinter import *
 from tkinter import ttk
+from tkinter import filedialog
 import sys
 
 # Encoding stuff : https://www.devdungeon.com/content/working-binary-data-python
 # OpenKeynote
 # Copyright Mathias Sønderskov Nielsen 2019
 
-# sharp fonts in high res (https://stackoverflow.com/questions/41315873/
-# attempting-to-resolve-blurred-tkinter-text-scaling-on-windows-10-high-dpi-disp)
+
+
+
 if os.name == "nt":
-    from ctypes import windll, pointer, wintypes
     fpath = r"C:\Users\MANI\py\MYKEYNOTEFILE.TXT"
-    try:
-        windll.shcore.SetProcessDpiAwareness(1)
-    except Exception:
-        pass  # this will fail on Windows Server and maybe early Windows
 else:
     fpath = "/Users/msn/Dropbox/py/Git/OpenKeynote/MYKEYNOTEFILE.TXT"
 
 
 
-# filepaths
-# fpath = "/Users/msn/Dropbox/py/Git/OpenKeynote/MYKEYNOTEFILE.TXT"
-# fpath = r"C:\Users\MANI\py\MYKEYNOTEFILE.TXT"
-fpath = fpath.replace("\\", "/")
-folder = "/".join(fpath.split("/")[:-1])
-
-filename = fpath.split("/")[-1]
-bkfolder = folder + "/KNOTE_backups"
-
-# overrules premade filepath with cmd prompt input.
-args = sys.argv
-if len(sys.argv) > 1:
-    fpath = sys.argv[-1]
 
 class UserInterface():
 
     _names = {}
 
-    def __init__(self, name = None):
+    def __init__(self, filehandler, name = None):
         if id != None:
             self._name_ = id
         else:
@@ -50,6 +34,8 @@ class UserInterface():
         self.itemlist = []
         self.root = Tk()
         self.previeweditem = ""
+        self.editeditem = ""
+        self._filehandler = filehandler
 
         self.pw = PanedWindow(self.root, orient=HORIZONTAL)
         self.pw.pack(fill=BOTH, expand=1)
@@ -98,7 +84,6 @@ class UserInterface():
         for a, button_text in enumerate(middlebuttons):
             self.vbs.append(Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)
-            # vbs[a].grid(row=int(a)+1)
 
         # label
         self.tx1 = Label(self.frame_right, text="Preview")
@@ -128,14 +113,42 @@ class UserInterface():
         self.frame_right.rowconfigure(3, weight=1)
         self.frame_right.columnconfigure(1, weight=1)
 
-        """
-        Resizes with 1 pixel to avoid mainUI bugs in mojave
-        """
-        a = self.root.winfo_geometry().split('+')[0]
-        b = a.split('x')
-        w = int(b[0])
-        h = int(b[1])
-        self.root.geometry('%dx%d' % (w+1, h+1))
+        # sharp fonts in high res (https://stackoverflow.com/questions/41315873/
+        # attempting-to-resolve-blurred-tkinter-text-scaling-on-windows-10-high-dpi-disp)
+        if os.name == "nt":
+            from ctypes import windll, pointer, wintypes
+            try:
+                windll.shcore.SetProcessDpiAwareness(1)
+            except Exception:
+                pass  # this will fail on Windows Server and maybe early Windows
+        else:
+            """
+            Resizes with 1 pixel to avoid mainUI bugs in mojave
+            """
+            a = self.root.winfo_geometry().split('+')[0]
+            b = a.split('x')
+            w = int(b[0])
+            h = int(b[1])
+            self.root.geometry('%dx%d' % (w+1, h+1))
+
+
+        #root.columnconfigure(1, weight=1)
+        # root.rowconfigure(1, weight=1)
+        for i in "Up,Down,Enter,Left".split(","):
+            self.root.bind("<"+i+">", self.changeselection)
+
+        self.root.bind("<Configure>", self.resizeui)
+        self.width = 1200
+        self.height = 800
+        self.root.winfo_width()
+        self.root.winfo_height()
+        self.x = (root.winfo_screenwidth() // 2) - (self.width // 2)
+        self.y = (root.winfo_screenheight() // 2) - (self.height // 2)
+        self.root.geometry(f"{self.width}x{self.height}+{self.x}+{self.y}")
+        self.root.update()
+        self.root.after(0, self.fixUI)
+        self.root.mainloop()
+
 
     def changeselection(self):
         """
@@ -143,7 +156,7 @@ class UserInterface():
         """
 
         itemname = self.l1.focus()
-        previeweditem = self.l1.focus()
+        self.previeweditem = self.l1.focus()
         try:
             parentname = [i["parent"]
                           for i in self.itemlist if i["name"] == itemname][0]
@@ -193,139 +206,152 @@ class UserInterface():
             self.e1.delete("1.0", END)
             self.e1.insert(END, newcontent)
 
-
-mainui = UserInterface()
-
-
-
-def createbackup(folder, filename, bkfolder):
-    """
-    Backups your file into a backupfolder
-    """
-    mytime = datetime.now().strftime("%Y%m%d_%H%M%S")
-    try:
-        os.mkdir(bkfolder)
-    except OSError:
-        # folder already exists
+    def updateTree(self):
+        itemlist = self._filehandler.itemlist #gets from FileHandler
+        uniquenames = set()
+        while len(itemlist) > 0:
+            for i, item in enumerate(itemlist):
+                parent = item["parent"]
+                if parent == "":
+                    self.l1.insert('', 'end', item["name"], text=item["name"])
+                    del itemlist[i]
+                    uniquenames.add(item["name"])
+                elif parent in uniquenames:  # it exists, so lets add to it.
+                    self.l1.insert(item["parent"], 'end', item["name"], text=item["name"])
+                    del itemlist[i]
+                    uniquenames.add(item["name"])
+    def resizeui(self):
+        #print("newsize")
         pass
-    try:
-        filefirstname = ".".join(filename.split(".")[:-1])
-        targetfile = bkfolder + "/" + filefirstname + "_" + mytime + ".txt"
-        copyfile(folder + "/" + filename, targetfile)
-    except FileNotFoundError as e:
-        print("Can't create backup!! (Error code: {} )".format(e))
-
-
-previeweditem = ""
-editeditem = ""
-
-
-def getlengths(fpath):
-    lengths = []
-    with open(fpath, "rb") as f:
-        chars = f.read()
-        for i in chars.split(b"\r"):
-            number = int(len(i)/2)
-            lengths.append(number)
-    return lengths
 
 
 
-
-
-
-
-
-
-
-# WIP
-
-
-def savefile(self):
+class FileHandler():
     """
-    Saves file! WIP
+    Class to handle file loading and saving
     """
-    with open(folder + "/" + "KEYTESTout.txt", 'wb') as f:
-        for item in itemlist:
-            f.write(bytes(item["name"], "utf-8"))
-            f.write(b"\t")
-            f.write(bytes(item["content"], "utf-8"))
-            f.write(b"\t")
-            f.write(bytes(item["parent"], "utf-8"))
-            f.write(b"\r")
+    def __init__(self, path = None, prebackup = True):
+        self._dict = {}
+        self.path = path
+        self.itemlist = []
+
+        self._prebackup = prebackup
+        if self.path == None:
+            self.open_file()
+        self.path = self.path.replace("\\", "/")
+        self._folder = "/".join(self.path.split("/")[:-1])
+
+        self._filename = self.path.split("/")[-1]
+        self._bkfolder = self._folder + "/KNOTE_backups"
+        if self._prebackup == True:
+            self.createbackup(self._folder, self._filename, self._bkfolder)
+        # filepaths
 
 
-# SETUP GUI
-root = Tk()
+        # overrules premade filepath with cmd prompt input.
 
 
 
-itemlist = []
-createbackup(folder, filename, bkfolder)
-lengths = getlengths(fpath)
+    def open_file(self):
+        if self.path != None:
+            self.close_file()
+        self.path = filedialog.askopenfilename(
+            initialdir = "/",
+            title = "Open File",
+            filetypes = (("text files", "*.txt"), ("All files", "*.*")))
+        print(f"Opening {self.path}")
 
 
-def readfile(fpath):
-    with open(fpath, "r", encoding="utf-16") as f:
-        chars = f.read()
-        count = 0
-        for i, length in enumerate(lengths[:-1]):
-            fromnum = count
-            tonum = count+lengths[i]
-            chunk = str(chars[fromnum:tonum])
-            count += lengths[i]
-            try:
-                name = str(chunk[0:].split("\t")[0])
-            except:
-                name = ""
-            try:
-                content = str(chunk[0:].split("\t")[1])
-            except:
-                content = ""
-            try:
-                parent = chunk[1:].strip().split("\t")[2]
-            except:
-                parent = ""
-            itemlist.append(
-                {"name": name, "content": content, "parent": parent})
-    return itemlist
+        self._lengths = []
+        with open(self.path, "rb") as f:
+            chars = f.read()
+            for i in chars.split(b"\r"):
+                number = int(len(i)/2)
+                self._lengths.append(number())
+
+        self.itemlist = []
+        with open(self.path, "r", encoding="utf-16") as f:
+            chars = f.read()
+            count = 0
+            for i, length in enumerate(self._lengths[:-1]):
+                fromnum = count
+                tonum = count+lengths[i]
+                chunk = str(chars[fromnum:tonum])
+                count += lengths[i]
+                try:
+                    name = str(chunk[0:].split("\t")[0])
+                except:
+                    name = ""
+                try:
+                    content = str(chunk[0:].split("\t")[1])
+                except:
+                    content = ""
+                try:
+                    parent = chunk[1:].strip().split("\t")[2]
+                except:
+                    parent = ""
+                self.itemlist.append(
+                    {"name": name, "content": content, "parent": parent})
 
 
-itemlist = readfile(fpath)
-templist = itemlist[:]  # local copy
-uniquenames = set()
+    def close_file():
+        """
+        Closes current file
+        """
+        pass
+        #Ask to save current file.
+        #Close current file.
 
-while len(templist) > 0:
-    for i, item in enumerate(templist):
-        parent = item["parent"]
-        if parent == "":
-            l1.insert('', 'end', item["name"], text=item["name"])
-            del templist[i]
-            uniquenames.add(item["name"])
-        elif parent in uniquenames:  # it exists, so lets add to it.
-            l1.insert(item["parent"], 'end', item["name"], text=item["name"])
-            del templist[i]
-            uniquenames.add(item["name"])
+    def createbackup(self, folder, filename, bkfolder):
+        """
+        Backups your file into a backupfolder
+        """
+        mytime = datetime.now().strftime("%Y%m%d_%H%M%S")
+        try:
+            os.mkdir(bkfolder)
+        except OSError:
+            # folder already exists
+            pass
+        try:
+            filefirstname = ".".join(filename.split(".")[:-1])
+            targetfile = bkfolder + "/" + filefirstname + "_" + mytime + ".txt"
+            copyfile(folder + "/" + filename, targetfile)
+        except FileNotFoundError as e:
+            print(f"Can't create backup!! (Error code: {e} )")
 
 
-def resizeui(self):
-    #print("newsize")
-    pass
+    def savefile(self):
+        """
+        Saves file! WIP
+        """
+        #self.path ...
+        with open(self._folder + "/" + "KEYTESTout.txt", 'wb') as f:
+            for item in itemlist:
+                f.write(bytes(item["name"], "utf-8"))
+                f.write(b"\t")
+                f.write(bytes(item["content"], "utf-8"))
+                f.write(b"\t")
+                f.write(bytes(item["parent"], "utf-8"))
+                f.write(b"\r")
 
 
-#root.columnconfigure(1, weight=1)
-# root.rowconfigure(1, weight=1)
-for i in "Up,Down,Enter,Left".split(","):
-    root.bind("<"+i+">", changeselection)
 
-root.bind("<Configure>", resizeui)
-width = 1200
-height = 800
-root.winfo_width()
-root.winfo_height()
-x = (root.winfo_screenwidth() // 2) - (width // 2)
-y = (root.winfo_screenheight() // 2) - (height // 2)
-root.geometry("{}x{}+{}+{}".format(width, height, x, y))
-root.update()
-root.after(0, fixUI)
-root.mainloop()
+
+
+
+
+
+
+def main():
+    """
+    main loop
+    """
+    if len(sys.argv) > 1:
+        path = sys.argv[-1]
+        filehandler = FileHandler(path)
+    else:
+        filehandler = FileHandler()
+    mainui = UserInterface(filehandler)
+
+if __name__ == '__main__':
+    main()
