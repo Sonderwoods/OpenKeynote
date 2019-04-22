@@ -6,36 +6,18 @@ from tkinter import ttk
 from tkinter import filedialog
 import sys
 
-# Encoding stuff : https://www.devdungeon.com/content/working-binary-data-python
 # OpenKeynote
 # Copyright Mathias Sønderskov Nielsen 2019
 
-
-
-
-if os.name == "nt":
-    fpath = r"C:\Users\MANI\py\MYKEYNOTEFILE.TXT"
-else:
-    fpath = "/Users/msn/Dropbox/py/Git/OpenKeynote/MYKEYNOTEFILE.TXT"
-
-
-
-
 class UserInterface():
 
-    _names = {}
-
-    def __init__(self, filehandler, name = None):
-        if id != None:
-            self._name_ = id
-        else:
-            self._name_ = "n_" + str(len(self._names))
-        print("initiated userinterface {}".format(self._name_))
+    def __init__(self, filehandler):
+        self._filehandler = filehandler
         self.itemlist = []
         self.root = Tk()
         self.previeweditem = ""
         self.editeditem = ""
-        self._filehandler = filehandler
+
 
         self.pw = PanedWindow(self.root, orient=HORIZONTAL)
         self.pw.pack(fill=BOTH, expand=1)
@@ -59,7 +41,7 @@ class UserInterface():
         self.sf1.grid(row=0, column=0)
         self.sb1 = Button(self.frame_left, text="SAVEFILE", width=10)
         self.sb1.grid(row=0, column=1)
-        self.sb1.bind("<ButtonRelease-1>", self.savefile)
+        self.sb1.bind("<ButtonRelease-1>", self._filehandler.savefile)
         self.sb2 = Button(self.frame_left, text="X", width=3)
         self.sb2.grid(row=0, column=2)
 
@@ -121,7 +103,28 @@ class UserInterface():
                 windll.shcore.SetProcessDpiAwareness(1)
             except Exception:
                 pass  # this will fail on Windows Server and maybe early Windows
-        else:
+
+
+
+        #root.columnconfigure(1, weight=1)
+        # root.rowconfigure(1, weight=1)
+        for i in "Up,Down,Enter,Left".split(","):
+            self.root.bind("<"+i+">", self.changeselection)
+
+        #self.root.bind("<Configure>", self.resizeui)
+        self.width = 1200
+        self.height = 800
+        #self.root.winfo_width()
+        #self.root.winfo_height()
+        self.x = (self.root.winfo_screenwidth() // 2) - (self.width // 2)
+        self.y = (self.root.winfo_screenheight() // 2) - (self.height // 2)
+        self.root.geometry(f"{self.width}x{self.height}+{self.x}+{self.y}")
+        #self.root.update()
+        #self.root.after(0, self.fixUI)
+        self.root.mainloop()
+
+    def fixUI(self):
+        if os.name != "nt":
             """
             Resizes with 1 pixel to avoid mainUI bugs in mojave
             """
@@ -131,35 +134,18 @@ class UserInterface():
             h = int(b[1])
             self.root.geometry('%dx%d' % (w+1, h+1))
 
-
-        #root.columnconfigure(1, weight=1)
-        # root.rowconfigure(1, weight=1)
-        for i in "Up,Down,Enter,Left".split(","):
-            self.root.bind("<"+i+">", self.changeselection)
-
-        self.root.bind("<Configure>", self.resizeui)
-        self.width = 1200
-        self.height = 800
-        self.root.winfo_width()
-        self.root.winfo_height()
-        self.x = (root.winfo_screenwidth() // 2) - (self.width // 2)
-        self.y = (root.winfo_screenheight() // 2) - (self.height // 2)
-        self.root.geometry(f"{self.width}x{self.height}+{self.x}+{self.y}")
-        self.root.update()
-        self.root.after(0, self.fixUI)
-        self.root.mainloop()
-
-
-    def changeselection(self):
+    def changeselection(self, button):
         """
         what happens when changing selection in the treeview..
         """
-
+        itemlist = self._filehandler.itemlist
         itemname = self.l1.focus()
+        #print(itemlist)
+        #print(itemname)
+
         self.previeweditem = self.l1.focus()
         try:
-            parentname = [i["parent"]
-                          for i in self.itemlist if i["name"] == itemname][0]
+            parentname = [i["parent"] for i in itemlist if i["name"] == itemname][0]
             index = [i for i, j in enumerate(itemlist) if j["name"] == itemname][0]
         except:
             parentname = itemlist[0]["name"]
@@ -171,26 +157,28 @@ class UserInterface():
             self.tx1.config(text="previewing: {}".format(itemname))
 
         self.e1.delete("1.0", END)
-        self.e1.insert(END, self.itemlist[index]["content"])
+        self.e1.insert(END, itemlist[index]["content"])
 
-    def edititem(self):
+    def edititem(self, button):
         """
         copies text from e1 to e2
         """
+        itemlist = self._filehandler.itemlist
         self.e2.delete("1.0", END)
-        self.e2.insert(END, e1.get("1.0", END))
+        self.e2.insert(END, self.e1.get("1.0", END))
 
         self.editeditem = self.previeweditem
         name = self.editeditem
-        self.parentname = [i["parent"] for i in self.itemlist if i["name"] == name][0]
-        index = [i for i, j in enumerate(self.itemlist) if j["name"] == name][0]
-        if len(parentname) > 1:
-            tx2.config(text="Editing: {} ( parent: {} )".format(
+        self.parentname = [i["parent"] for i in itemlist if i["name"] == name]
+        index = [i for i, j in enumerate(itemlist) if j["name"] == name]
+        #TODO eventualt [0] after name] above 2 lines.
+        if len(self.parentname) > 1:
+            self.tx2.config(text="Editing: {} ( parent: {} )".format(
                 name, parentname))
         else:
-            tx2.config(text="Editing: {}".format(name))
+            self.tx2.config(text="Editing: {}".format(name))
 
-    def saveitem(self):
+    def saveitem(self, button):
         """
         saves text from gui back into main dictionary
         and redraws tree, and selects where we were.
@@ -202,7 +190,7 @@ class UserInterface():
         for i, k in enumerate(self.itemlist):    # update Dictionary
             if k["name"] == self.editeditem:
                 self.itemlist[i]["content"] = newcontent
-        if previeweditem == self.editeditem:
+        if self.previeweditem == self.editeditem:
             self.e1.delete("1.0", END)
             self.e1.insert(END, newcontent)
 
@@ -230,6 +218,8 @@ class FileHandler():
     """
     Class to handle file loading and saving
     """
+
+
     def __init__(self, path = None, prebackup = True):
         self._dict = {}
         self.path = path
@@ -239,18 +229,20 @@ class FileHandler():
         if self.path == None:
             self.open_file()
         self.path = self.path.replace("\\", "/")
-        self._folder = "/".join(self.path.split("/")[:-1])
 
+        self._folder = "/".join(self.path.split("/")[:-1])
         self._filename = self.path.split("/")[-1]
         self._bkfolder = self._folder + "/KNOTE_backups"
+
         if self._prebackup == True:
+            print(f"Trying to backup to {self._bkfolder}")
             self.createbackup(self._folder, self._filename, self._bkfolder)
+
+
+        self.open_file()
         # filepaths
 
-
         # overrules premade filepath with cmd prompt input.
-
-
 
     def open_file(self):
         if self.path != None:
@@ -261,13 +253,14 @@ class FileHandler():
             filetypes = (("text files", "*.txt"), ("All files", "*.*")))
         print(f"Opening {self.path}")
 
-
         self._lengths = []
         with open(self.path, "rb") as f:
             chars = f.read()
             for i in chars.split(b"\r"):
                 number = int(len(i)/2)
-                self._lengths.append(number())
+                self._lengths.append(number)
+        # Encoding stuff : https://www.devdungeon.com/content/working-binary-data-python
+
 
         self.itemlist = []
         with open(self.path, "r", encoding="utf-16") as f:
@@ -275,9 +268,9 @@ class FileHandler():
             count = 0
             for i, length in enumerate(self._lengths[:-1]):
                 fromnum = count
-                tonum = count+lengths[i]
+                tonum = count+self._lengths[i]
                 chunk = str(chars[fromnum:tonum])
-                count += lengths[i]
+                count += self._lengths[i]
                 try:
                     name = str(chunk[0:].split("\t")[0])
                 except:
@@ -294,7 +287,7 @@ class FileHandler():
                     {"name": name, "content": content, "parent": parent})
 
 
-    def close_file():
+    def close_file(self):
         """
         Closes current file
         """
@@ -320,13 +313,13 @@ class FileHandler():
             print(f"Can't create backup!! (Error code: {e} )")
 
 
-    def savefile(self):
+    def savefile(self, button):
         """
         Saves file! WIP
         """
-        #self.path ...
+        #TODO self.path ...
         with open(self._folder + "/" + "KEYTESTout.txt", 'wb') as f:
-            for item in itemlist:
+            for item in self.itemlist:
                 f.write(bytes(item["name"], "utf-8"))
                 f.write(b"\t")
                 f.write(bytes(item["content"], "utf-8"))
@@ -335,23 +328,22 @@ class FileHandler():
                 f.write(b"\r")
 
 
-
-
-
-
-
-
-
-def main():
+def main(path = None):
     """
     main loop
     """
     if len(sys.argv) > 1:
         path = sys.argv[-1]
+    if path != None:
         filehandler = FileHandler(path)
     else:
         filehandler = FileHandler()
-    mainui = UserInterface(filehandler)
+    mainui = UserInterface(filehandler = filehandler)
+
+if os.name == "nt":
+    path = r"C:\Users\MANI\py\MYKEYNOTEFILE.TXT"
+else:
+    path = "/Users/msn/Dropbox/py/Git/OpenKeynote/MYKEYNOTEFILE.TXT"
 
 if __name__ == '__main__':
-    main()
+    main(path)
