@@ -41,9 +41,10 @@ class UserInterface():
         self.sf1.grid(row=0, column=0)
         self.sb1 = Button(self.frame_left, text="SAVEFILE", width=10)
         self.sb1.grid(row=0, column=1)
-        self.sb1.bind("<ButtonRelease-1>", self._filehandler.savefile)
-        self.sb2 = Button(self.frame_left, text="X", width=3)
+        self.sb1.bind("<ButtonRelease-1>", self._filehandler.save_file)
+        self.sb2 = Button(self.frame_left, text="OPENFILE", width=3)
         self.sb2.grid(row=0, column=2)
+        self.sb2.bind("<ButtonRelease-1>", self._filehandler.open_file)
 
         # Setup treebar and scroll
         self.l1 = ttk.Treeview(self.frame_left)
@@ -111,16 +112,18 @@ class UserInterface():
         for i in "Up,Down,Enter,Left".split(","):
             self.root.bind("<"+i+">", self.changeselection)
 
+        self.updateTree()
+
         #self.root.bind("<Configure>", self.resizeui)
         self.width = 1200
         self.height = 800
-        #self.root.winfo_width()
-        #self.root.winfo_height()
+        self.root.winfo_width()
+        self.root.winfo_height()
         self.x = (self.root.winfo_screenwidth() // 2) - (self.width // 2)
         self.y = (self.root.winfo_screenheight() // 2) - (self.height // 2)
         self.root.geometry(f"{self.width}x{self.height}+{self.x}+{self.y}")
-        #self.root.update()
-        #self.root.after(0, self.fixUI)
+        self.root.update()
+        self.root.after(0, self.fixUI)
         self.root.mainloop()
 
     def fixUI(self):
@@ -140,8 +143,7 @@ class UserInterface():
         """
         itemlist = self._filehandler.itemlist
         itemname = self.l1.focus()
-        #print(itemlist)
-        #print(itemname)
+        if len(itemlist) == 0: return
 
         self.previeweditem = self.l1.focus()
         try:
@@ -194,8 +196,20 @@ class UserInterface():
             self.e1.delete("1.0", END)
             self.e1.insert(END, newcontent)
 
+
+
+    def __str__(self):
+        text = []
+        for i in self.itemlist[0:5]:
+            text.append(f"name: {i['name']}, \tcontent: {i['content']}, \
+                \tparent: {i['parent']}")
+        return "\n".join(text)
+
     def updateTree(self):
-        itemlist = self._filehandler.itemlist #gets from FileHandler
+        self.itemlist = self._filehandler.itemlist #gets from FileHandler
+        itemlist = self.itemlist[:] #temp list that we can delete from
+        print("Updating Tree")
+
         uniquenames = set()
         while len(itemlist) > 0:
             for i, item in enumerate(itemlist):
@@ -208,17 +222,16 @@ class UserInterface():
                     self.l1.insert(item["parent"], 'end', item["name"], text=item["name"])
                     del itemlist[i]
                     uniquenames.add(item["name"])
+
     def resizeui(self):
         #print("newsize")
         pass
-
 
 
 class FileHandler():
     """
     Class to handle file loading and saving
     """
-
 
     def __init__(self, path = None, prebackup = True):
         self._dict = {}
@@ -240,17 +253,21 @@ class FileHandler():
 
 
         self.open_file()
+
         # filepaths
 
         # overrules premade filepath with cmd prompt input.
 
-    def open_file(self):
-        if self.path != None:
-            self.close_file()
+    def open_file(self, button = None):
+        #if self.path != None:
+        #    self.close_file()
         self.path = filedialog.askopenfilename(
             initialdir = "/",
             title = "Open File",
             filetypes = (("text files", "*.txt"), ("All files", "*.*")))
+        if self.path == "":
+            print("Canceled file open")
+            return
         print(f"Opening {self.path}")
 
         self._lengths = []
@@ -313,19 +330,24 @@ class FileHandler():
             print(f"Can't create backup!! (Error code: {e} )")
 
 
-    def savefile(self, button):
+    def save_file(self, button):
         """
         Saves file! WIP
         """
         #TODO self.path ...
-        with open(self._folder + "/" + "KEYTESTout.txt", 'wb') as f:
-            for item in self.itemlist:
-                f.write(bytes(item["name"], "utf-8"))
-                f.write(b"\t")
-                f.write(bytes(item["content"], "utf-8"))
-                f.write(b"\t")
-                f.write(bytes(item["parent"], "utf-8"))
-                f.write(b"\r")
+        filepath = self._folder + "/" + "KEYTESTout.txt"
+        try:
+            with open(filepath, 'wb') as f:
+                for item in self.itemlist:
+                    f.write(bytes(item["name"], "utf-8"))
+                    f.write(b"\t")
+                    f.write(bytes(item["content"], "utf-8"))
+                    f.write(b"\t")
+                    f.write(bytes(item["parent"], "utf-8"))
+                    f.write(b"\r")
+            print(f"Successfully saved to {filepath}")
+        except:
+            print("Error trying to save the file")
 
 
 def main(path = None):
