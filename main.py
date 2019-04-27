@@ -5,9 +5,10 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
 import sys
-
+import io
 # OpenKeynote
 # Copyright Mathias Sønderskov Nielsen 2019
+
 
 class UserInterface():
 
@@ -17,7 +18,6 @@ class UserInterface():
         self.root = Tk()
         self.previeweditem = ""
         self.editeditem = ""
-
 
         self.pw = PanedWindow(self.root, orient=HORIZONTAL)
         self.pw.pack(fill=BOTH, expand=1)
@@ -34,10 +34,10 @@ class UserInterface():
         self.frame_center = Frame(self.pane_right)
         self.frame_center.grid(row=0, column=0, sticky=W+N, rowspan=4)
         self.frame_right = Frame(self.pane_right, borderwidth=5,
-                relief="solid")
+                                 relief="solid")
         self.frame_right.grid(row=0, column=1, sticky=W+E+N+S)
         self.sf1 = Text(self.frame_left, height=1, width=12, borderwidth=2,
-                relief="solid", highlightthickness=0)
+                        relief="solid", highlightthickness=0)
         self.sf1.grid(row=0, column=0)
         self.sb1 = Button(self.frame_left, text="SAVEFILE", width=10)
         self.sb1.grid(row=0, column=1)
@@ -53,7 +53,7 @@ class UserInterface():
         self.l1['yscrollcommand'] = self.yscroll.set
         self.yscroll['command'] = self.l1.yview
         self.l1.grid(row=1, column=0, columnspan=3,  padx=(30),
-                pady=(10), sticky=N+S+E+W)
+                     pady=(10), sticky=N+S+E+W)
         self.yscroll.grid(row=1, column=0, columnspan=3, sticky=N+S+E)
         self.l1.bind("<ButtonRelease-1>", self.changeselection)
 
@@ -62,8 +62,8 @@ class UserInterface():
         self.frame_left.columnconfigure(1, weight=1)
 
         self.vbs = []  # Vertical bar
-        middlebuttons = ("Up","Down", "<-", "New", "New Sub", "Delete",
-        "Rename", "Parent")
+        middlebuttons = ("Up", "Down", "<-", "New", "New Sub", "Delete",
+                         "Rename", "Parent")
         for a, button_text in enumerate(middlebuttons):
             self.vbs.append(Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)
@@ -75,12 +75,12 @@ class UserInterface():
         self.tx2.grid(row=2, column=0)
 
         self.e1 = Text(self.frame_right, fg="#555", font=("Courier", 15),
-                  padx=10, pady=10, highlightthickness=0,
-                  borderwidth=1, relief="solid")
+                       padx=10, pady=10, highlightthickness=0,
+                       borderwidth=1, relief="solid")
         self.e1.grid(row=1, column=0, columnspan=3, sticky=N+S+E+W)
 
         self.e2 = Text(self.frame_right, font=("Courier", 15), borderwidth=3,
-                  relief="solid", padx=10, pady=10, highlightthickness=0)
+                       relief="solid", padx=10, pady=10, highlightthickness=0)
         self.e2.grid(row=3, column=0, columnspan=3, sticky=N+S+E+W)
 
         self.vb1 = Button(self.frame_right, text="Edit")
@@ -104,8 +104,6 @@ class UserInterface():
                 windll.shcore.SetProcessDpiAwareness(1)
             except Exception:
                 pass  # this will fail on Windows Server and maybe early Windows
-
-
 
         #root.columnconfigure(1, weight=1)
         # root.rowconfigure(1, weight=1)
@@ -143,13 +141,16 @@ class UserInterface():
         """
         itemlist = self._filehandler.itemlist
         itemname = self.l1.focus()
-        if len(itemlist) == 0: return
+        if len(itemlist) == 0:
+            return
 
         self.previeweditem = self.l1.focus()
         try:
-            parentname = [i["parent"] for i in itemlist if i["name"] == itemname][0]
-            index = [i for i, j in enumerate(itemlist) if j["name"] == itemname][0]
-        except:
+            parentname = [i["parent"]
+                          for i in itemlist if i["name"] == itemname][0]
+            index = [i for i, j in enumerate(
+                itemlist) if j["name"] == itemname][0]
+        except IndexError:
             parentname = itemlist[0]["name"]
             index = 0
         if len(parentname) > 1:
@@ -173,7 +174,7 @@ class UserInterface():
         name = self.editeditem
         self.parentname = [i["parent"] for i in itemlist if i["name"] == name]
         index = [i for i, j in enumerate(itemlist) if j["name"] == name]
-        #TODO eventualt [0] after name] above 2 lines.
+        # TODO eventualt [0] after name] above 2 lines.
         if len(self.parentname) > 1:
             self.tx2.config(text="Editing: {} ( parent: {} )".format(
                 name, parentname))
@@ -196,8 +197,6 @@ class UserInterface():
             self.e1.delete("1.0", END)
             self.e1.insert(END, newcontent)
 
-
-
     def __str__(self):
         text = []
         for i in self.itemlist[0:5]:
@@ -206,8 +205,8 @@ class UserInterface():
         return "\n".join(text)
 
     def updateTree(self):
-        self.itemlist = self._filehandler.itemlist #gets from FileHandler
-        itemlist = self.itemlist[:] #temp list that we can delete from
+        self.itemlist = self._filehandler.itemlist  # gets from FileHandler
+        itemlist = self.itemlist[:]  # temp list that we can delete from
         print("Updating Tree")
 
         uniquenames = set()
@@ -215,16 +214,22 @@ class UserInterface():
             for i, item in enumerate(itemlist):
                 parent = item["parent"]
                 if parent == "":
-                    self.l1.insert('', 'end', item["name"], text=item["name"])
+                    try:
+                        self.l1.insert(
+                            '', 'end', item["name"], text=item["name"])
+                    except TclError:
+                        print(f'Error: Tried to add item {item["name"]}, but it\
+                        was already in the list')
                     del itemlist[i]
                     uniquenames.add(item["name"])
                 elif parent in uniquenames:  # it exists, so lets add to it.
-                    self.l1.insert(item["parent"], 'end', item["name"], text=item["name"])
+                    self.l1.insert(item["parent"], 'end',
+                                   item["name"], text=item["name"])
                     del itemlist[i]
                     uniquenames.add(item["name"])
 
     def resizeui(self):
-        #print("newsize")
+        # print("newsize")
         pass
 
 
@@ -233,7 +238,7 @@ class FileHandler():
     Class to handle file loading and saving
     """
 
-    def __init__(self, path = None, prebackup = True):
+    def __init__(self, path=None, prebackup=True):
         self._dict = {}
         self.path = path
         self.itemlist = []
@@ -251,66 +256,52 @@ class FileHandler():
             print(f"Trying to backup to {self._bkfolder}")
             self.createbackup(self._folder, self._filename, self._bkfolder)
 
-
         self.open_file()
 
-        # filepaths
-
-        # overrules premade filepath with cmd prompt input.
-
-    def open_file(self, button = None):
-        #if self.path != None:
+    def open_file(self, button=None):
+        # if self.path != None:
         #    self.close_file()
         self.path = filedialog.askopenfilename(
-            initialdir = "/",
-            title = "Open File",
-            filetypes = (("text files", "*.txt"), ("All files", "*.*")))
+            initialdir="/",
+            title="Open File",
+            filetypes=(("text files", "*.txt"), ("All files", "*.*")))
         if self.path == "":
             print("Canceled file open")
             return
         print(f"Opening {self.path}")
 
-        self._lengths = []
-        with open(self.path, "rb") as f:
-            chars = f.read()
-            for i in chars.split(b"\r"):
-                number = int(len(i)/2)
-                self._lengths.append(number)
         # Encoding stuff : https://www.devdungeon.com/content/working-binary-data-python
-
-
         self.itemlist = []
-        with open(self.path, "r", encoding="utf-16") as f:
-            chars = f.read()
-            count = 0
-            for i, length in enumerate(self._lengths[:-1]):
-                fromnum = count
-                tonum = count+self._lengths[i]
-                chunk = str(chars[fromnum:tonum])
-                count += self._lengths[i]
+
+        with open(self.path, "r", encoding="utf-16", newline="") as f:
+            chars = f.read().split("\r")
+
+            for chunk in chars:
                 try:
-                    name = str(chunk[0:].split("\t")[0])
-                except:
+                    name = str(chunk[0:].split("\t")[0]).strip()
+                except IndexError:
                     name = ""
                 try:
                     content = str(chunk[0:].split("\t")[1])
-                except:
+                except IndexError:
                     content = ""
                 try:
-                    parent = chunk[1:].strip().split("\t")[2]
-                except:
+                    parent = chunk[1:].strip().split("\t")[2].strip()
+                except IndexError:
                     parent = ""
+                print(f"Name: {name}\tParent: {parent}")
+                print(content)
+                print("\n\n")
                 self.itemlist.append(
                     {"name": name, "content": content, "parent": parent})
-
 
     def close_file(self):
         """
         Closes current file
         """
         pass
-        #Ask to save current file.
-        #Close current file.
+        # TODO: Ask to save current file.
+        # TODO: Close current file.
 
     def createbackup(self, folder, filename, bkfolder):
         """
@@ -320,47 +311,47 @@ class FileHandler():
         try:
             os.mkdir(bkfolder)
         except OSError:
-            # folder already exists
-            pass
+            pass  # folder already exists
         try:
             filefirstname = ".".join(filename.split(".")[:-1])
             targetfile = bkfolder + "/" + filefirstname + "_" + mytime + ".txt"
             copyfile(folder + "/" + filename, targetfile)
         except FileNotFoundError as e:
-            print(f"Can't create backup!! (Error code: {e} )")
-
+            print(f"Error: Can't create backup!! ( {e} )")
 
     def save_file(self, button):
         """
         Saves file! WIP
         """
-        #TODO self.path ...
+        # TODO self.path ...
         filepath = self._folder + "/" + "KEYTESTout.txt"
         try:
-            with open(filepath, 'wb') as f:
-                for item in self.itemlist:
-                    f.write(bytes(item["name"], "utf-8"))
-                    f.write(b"\t")
-                    f.write(bytes(item["content"], "utf-8"))
-                    f.write(b"\t")
-                    f.write(bytes(item["parent"], "utf-8"))
-                    f.write(b"\r")
+            with open(filepath, 'w', newline='') as f:
+                for i, item in enumerate(self.itemlist):
+                    if len(item["name"]) > 0:
+                        f.write(item["name"] + "\t")
+                    f.write(item["content"])
+                    if len(item["parent"]) > 0:
+                        f.write("\t" + item["parent"])
+                    if i < len(self.itemlist)-1:
+                        f.write("\r\n")
             print(f"Successfully saved to {filepath}")
         except:
             print("Error trying to save the file")
 
 
-def main(path = None):
+def main(path=None):
     """
     main loop
     """
     if len(sys.argv) > 1:
         path = sys.argv[-1]
-    if path != None:
+    if path is not None:
         filehandler = FileHandler(path)
     else:
         filehandler = FileHandler()
-    mainui = UserInterface(filehandler = filehandler)
+    mainui = UserInterface(filehandler=filehandler)
+
 
 if os.name == "nt":
     path = r"C:\Users\MANI\py\MYKEYNOTEFILE.TXT"
