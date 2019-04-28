@@ -32,7 +32,7 @@ class UserInterface():
         self.frame_left = Frame(self.pane_left)
         self.frame_left.pack(fill=BOTH, expand=1)
         self.frame_center = Frame(self.pane_right)
-        self.frame_center.grid(row=0, column=0, sticky=W+N, rowspan=4)
+        self.frame_center.grid(row=0, column=0, sticky=W+N)
         self.frame_right = Frame(self.pane_right, borderwidth=5,
                                  relief="solid")
         self.frame_right.grid(row=0, column=1, sticky=W+E+N+S)
@@ -42,7 +42,7 @@ class UserInterface():
         self.sb1 = Button(self.frame_left, text="SAVEFILE", width=10)
         self.sb1.grid(row=0, column=1)
         self.sb1.bind("<ButtonRelease-1>", self._filehandler.save_file)
-        self.sb2 = Button(self.frame_left, text="OPENFILE", width=3)
+        self.sb2 = Button(self.frame_left, text="OPENFILE", width=10)
         self.sb2.grid(row=0, column=2)
         self.sb2.bind("<ButtonRelease-1>", self._filehandler.open_file)
 
@@ -70,30 +70,46 @@ class UserInterface():
 
         # label
         self.tx1 = Label(self.frame_right, text="Preview")
-        self.tx1.grid(row=0, column=0, columnspan=3)
+        self.tx1.pack(fill=BOTH)
+        self.e1 = Text(self.frame_right,
+                       fg="#555",
+                       font=("Courier", 13),
+                       padx=10,
+                       pady=10,
+                       highlightthickness=0,
+                       borderwidth=1,
+                       relief="solid",
+                       height=12,
+                       width=70)
+        #self.e1.grid(row=1, column=0, columnspan=3, sticky=N+S+E+W)
+        self.e1.pack(fill=X)
+        #self.tx1.grid(row=0, column=0, columnspan=3)
         self.tx2 = Label(self.frame_right, text="Editing")
-        self.tx2.grid(row=2, column=0)
+        self.tx2.pack(fill=BOTH)
+        #self.tx2.grid(row=2, column=0)
 
-        self.e1 = Text(self.frame_right, fg="#555", font=("Courier", 15),
-                       padx=10, pady=10, highlightthickness=0,
-                       borderwidth=1, relief="solid")
-        self.e1.grid(row=1, column=0, columnspan=3, sticky=N+S+E+W)
-
-        self.e2 = Text(self.frame_right, font=("Courier", 15), borderwidth=3,
-                       relief="solid", padx=10, pady=10, highlightthickness=0)
-        self.e2.grid(row=3, column=0, columnspan=3, sticky=N+S+E+W)
+        self.e2 = Text(self.frame_right,
+                       font=("Courier", 13),
+                       borderwidth=3,
+                       relief="solid",
+                       padx=10,
+                       pady=10,
+                       highlightthickness=0,
+                       height=12,
+                       width=70)
+        self.e2.pack(fill=BOTH)
+        #self.e2.grid(row=3, column=0, columnspan=3, sticky=N+S+E+W)
 
         self.vb1 = Button(self.frame_right, text="Edit")
-        self.vb1.grid(row=2, column=1)
+        self.vb1.pack()
+        #self.vb1.grid(row=2, column=1)
         self.vb1.bind("<ButtonRelease-1>", self.edititem)
         self.vb2 = Button(self.frame_right, text="Save")
-        self.vb2.grid(row=2, column=2)
+        self.vb2.pack()
+        #self.vb2.grid(row=2, column=2)
         self.vb2.bind("<ButtonRelease-1>", self.saveitem)
 
-        self.frame_right.rowconfigure(0, weight=1)
-        self.frame_right.rowconfigure(1, weight=2)
-        self.frame_right.rowconfigure(2, weight=1)
-        self.frame_right.rowconfigure(3, weight=1)
+        self.frame_right.rowconfigure(1, weight=1)
         self.frame_right.columnconfigure(1, weight=1)
 
         # sharp fonts in high res (https://stackoverflow.com/questions/41315873/
@@ -218,8 +234,8 @@ class UserInterface():
                         self.l1.insert(
                             '', 'end', item["name"], text=item["name"])
                     except TclError:
-                        print(f'Error: Tried to add item {item["name"]}, but it\
-                        was already in the list')
+                        print(f'Error: Tried to add item {item["name"]}, but it'
+                              'was already in the list')
                     del itemlist[i]
                     uniquenames.add(item["name"])
                 elif parent in uniquenames:  # it exists, so lets add to it.
@@ -238,7 +254,7 @@ class FileHandler():
     Class to handle file loading and saving
     """
 
-    def __init__(self, path=None, prebackup=True):
+    def __init__(self, path="", prebackup=True):
         self._dict = {}
         self.path = path
         self.itemlist = []
@@ -273,7 +289,7 @@ class FileHandler():
         # Encoding stuff : https://www.devdungeon.com/content/working-binary-data-python
         self.itemlist = []
 
-        with open(self.path, "r", encoding="utf-16", newline="") as f:
+        with open(self.path, "r", newline="", encoding="UTF-16") as f:
             chars = f.read().split("\r")
 
             for chunk in chars:
@@ -303,6 +319,13 @@ class FileHandler():
         # TODO: Ask to save current file.
         # TODO: Close current file.
 
+    def new_item(self, item, content, parent=None):
+        """
+        Creates new item in our itemlist
+        """
+        # TODO not done yet.
+        pass
+
     def createbackup(self, folder, filename, bkfolder):
         """
         Backups your file into a backupfolder
@@ -324,20 +347,28 @@ class FileHandler():
         Saves file! WIP
         """
         # TODO self.path ...
-        filepath = self._folder + "/" + "KEYTESTout.txt"
-        try:
-            with open(filepath, 'w', newline='') as f:
-                for i, item in enumerate(self.itemlist):
-                    if len(item["name"]) > 0:
-                        f.write(item["name"] + "\t")
-                    f.write(item["content"])
-                    if len(item["parent"]) > 0:
-                        f.write("\t" + item["parent"])
-                    if i < len(self.itemlist)-1:
-                        f.write("\r\n")
-            print(f"Successfully saved to {filepath}")
-        except:
-            print("Error trying to save the file")
+        #filepath = self._folder + "/" + "KEYTESTout.txt"
+        filepath = filedialog.asksaveasfilename(
+            initialdir=self._folder,
+            title="select file",
+            filetypes=(("txt files", "*.txt"), ("all files", "*.*"))
+        )
+        # f =
+        # try:
+        with open(filepath, 'w', newline='', encoding="UTF-16") as f:
+            if f is None:
+                return
+            for i, item in enumerate(self.itemlist):
+                if len(item["name"]) > 0:
+                    f.write(item["name"] + "\t")
+                f.write(item["content"])
+                if len(item["parent"]) > 0:
+                    f.write("\t" + item["parent"])
+                if i < len(self.itemlist)-1:
+                    f.write("\r\n")
+        print(f"Successfully saved to {filepath}")
+        # except:
+        #    print("Error trying to save the file")
 
 
 def main(path=None):
