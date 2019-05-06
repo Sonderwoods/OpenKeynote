@@ -43,10 +43,10 @@ class UserInterface():
         self.sb1.bind("<ButtonRelease-1>", self._filehandler.save_file)
         self.sb2 = Button(self.frame_left, text="OPENFILE", width=3)
         self.sb2.grid(row=0, column=2)
-        self.sb2.bind("<ButtonRelease-1>", self._filehandler.open_file)
+        self.sb2.bind("<ButtonRelease-1>", self.open_file)
 
         # Setup treebar and scroll
-        self.l1 = ttk.Treeview(self.frame_left)
+        self.l1 = ttk.Treeview(self.frame_left, show="tree")
         self.yscroll = Scrollbar(self.frame_left, orient=VERTICAL)
         self.yscroll.config(width=10)
         self.l1['yscrollcommand'] = self.yscroll.set
@@ -134,6 +134,11 @@ class UserInterface():
             h = int(b[1])
             self.root.geometry('%dx%d' % (w+1, h+1))
 
+    def open_file(self, button):
+        if (self._filehandler.open_file()):
+            self.e1.delete("1.0", END)
+            self.e2.delete("1.0", END)
+
     def changeselection(self, button):
         """
         what happens when changing selection in the treeview..
@@ -180,6 +185,20 @@ class UserInterface():
         else:
             self.tx2.config(text="Editing: {}".format(name))
 
+    def treeview_sort_column(self, tv, col, reverse):
+        object = self.l1
+        l = [(object.set(k, col), k) for k in object.get_children('')]
+        l.sort(reverse=reverse)
+
+        # rearrange items in sorted positions
+        for index, (val, k) in enumerate(l):
+            object.move(k, '', index)
+
+        # reverse sort next time
+        #TODO
+        object.heading(col, command=lambda: \
+                   self.treeview_sort_column(tv, col, not reverse))
+
     def saveitem(self, button):
         """
         saves text from gui back into main dictionary
@@ -191,7 +210,7 @@ class UserInterface():
         newcontent = self.e2.get("1.0", END)
         for i, k in enumerate(self.itemlist):    # update Dictionary
             if k["name"] == self.editeditem:
-                self.itemlist[i]["content"] = newcontent
+                self._filehandler.itemlist[i]["content"] = newcontent
         if self.previeweditem == self.editeditem:
             self.e1.delete("1.0", END)
             self.e1.insert(END, newcontent)
@@ -205,8 +224,7 @@ class UserInterface():
 
     def updateTree(self):
         self.itemlist = self._filehandler.itemlist  # gets from FileHandler
-        itemlist = self.itemlist[:]  # temp list that we can delete from
-        print("Updating Tree")
+        itemlist = self.itemlist[:]   # temp list that we can delete from
 
         uniquenames = set()
         while len(itemlist) > 0:
@@ -226,6 +244,7 @@ class UserInterface():
                                    item["name"], text=item["name"])
                     del itemlist[i]
                     uniquenames.add(item["name"])
+        print("updated tree...")
 
     def resizeui(self):
         # print("newsize")

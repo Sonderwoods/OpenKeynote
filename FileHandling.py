@@ -20,9 +20,13 @@ class FileHandler():
         self.itemlist = []
 
         self._prebackup = prebackup
+
+        self.path = self.path.replace("\\", "/")
+
         if self.path == None:
             self.open_file()
-        self.path = self.path.replace("\\", "/")
+        else:
+            self.open_file(path=path)
 
         self._folder = "/".join(self.path.split("/")[:-1])
         self._filename = self.path.split("/")[-1]
@@ -32,22 +36,25 @@ class FileHandler():
             print(f"Trying to backup to {self._bkfolder}")
             self.createbackup(self._folder, self._filename, self._bkfolder)
 
-        self.open_file()
+        #self.open_file()
 
-    def open_file(self, button=None):
+    def open_file(self, button=None, path=None):
         # if self.path != None:
         #    self.close_file()
-        self.path = filedialog.askopenfilename(
-            initialdir="/",
-            title="Open File",
-            filetypes=(("text files", "*.txt"), ("All files", "*.*")))
-        if self.path == "":
-            print("Canceled file open")
-            return
-        print(f"Opening {self.path}")
+        if path == None:
+            self.path = filedialog.askopenfilename(
+                initialdir="/",
+                title="Open File",
+                filetypes=(("text files", "*.txt"), ("All files", "*.*")))
+            if self.path == "":
+                print("Canceled file open")
+                return False
+            print(f"Opening {self.path}")
 
-        # Encoding stuff : https://www.devdungeon.com/content/working-binary-data-python
-        self.itemlist = []
+            # Encoding stuff : https://www.devdungeon.com/content/working-binary-data-python
+            self.itemlist = []
+        else:
+            self.path = path
 
         with open(self.path, "r", encoding="utf-16", newline="") as f:
             chars = f.read().split("\r")
@@ -65,19 +72,19 @@ class FileHandler():
                     parent = chunk[1:].strip().split("\t")[2].strip()
                 except IndexError:
                     parent = ""
-                #print(f"Name: {name}\tParent: {parent}")
-                # print(content)
-                # print("\n\n")
                 self.itemlist.append(
                     {"name": name, "content": content, "parent": parent})
+            self.itemlist = sorted(self.itemlist, key=lambda i: i['name'] in self.itemlist)
+        return True
 
     def close_file(self):
         """
         Closes current file
         """
-        pass
         # TODO: Ask to save current file.
-        # TODO: Close current file.
+        self.path = ""
+        self.itemlist = []
+
 
     def createbackup(self, folder, filename, bkfolder):
         """
