@@ -5,6 +5,7 @@ from tkinter import *
 from tkinter import ttk
 import sys
 
+## OLD FILE BEFORE EVERYTHING WENT INTO CLASSES.
 # Encoding stuff : https://www.devdungeon.com/content/working-binary-data-python
 # OpenKeynote
 # Copyright Mathias Sønderskov Nielsen 2019

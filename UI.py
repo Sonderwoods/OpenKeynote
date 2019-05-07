@@ -2,21 +2,18 @@ import os
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
-# OpenKeynote
-# Copyright Mathias Sønderskov Nielsen 2019
+from UIfunctions import UIfunctions
 
+class UserInterface(UIfunctions):
+    def __init__(self, filehandler, path=None):
 
-class UserInterface():
-    """
-    Handles all the UI
-    """
-
-    def __init__(self, filehandler):
         self._filehandler = filehandler
+
         self.itemlist = []
         self.root = Tk()
         self.previeweditem = ""
         self.editeditem = ""
+
 
         self.pw = PanedWindow(self.root, orient=HORIZONTAL)
         self.pw.pack(fill=BOTH, expand=1)
@@ -40,10 +37,10 @@ class UserInterface():
         self.sf1.grid(row=0, column=0)
         self.sb1 = Button(self.frame_left, text="SAVEFILE", width=10)
         self.sb1.grid(row=0, column=1)
-        self.sb1.bind("<ButtonRelease-1>", self._filehandler.save_file)
+        self.sb1.bind("<ButtonRelease-1>", self.save_file_dialog)
         self.sb2 = Button(self.frame_left, text="OPENFILE", width=3)
         self.sb2.grid(row=0, column=2)
-        self.sb2.bind("<ButtonRelease-1>", self.open_file)
+        self.sb2.bind("<ButtonRelease-1>", self.open_file_dialog)
 
         # Setup treebar and scroll
         self.l1 = ttk.Treeview(self.frame_left, show="tree")
@@ -61,12 +58,15 @@ class UserInterface():
         self.frame_left.columnconfigure(1, weight=1)
 
         self.vbs = []  # Vertical bar
-        middlebuttons = ("Up", "Down", "<-", "New", "New Sub", "Delete",
-                         "Rename", "Parent")
+        middlebuttons = ("New*", "New Sub*", "Delete*",
+                         "Rename*", "Change Parent*")
+        middlefunctions = (self.add_item, self.add_subitem, self.delete_item,
+            self.rename_item, self.change_parent)
         for a, button_text in enumerate(middlebuttons):
             self.vbs.append(Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)
-
+            self.vbs[a].bind("ButtonRelease-1", middlefunctions[a])
+            #TODO: Binds not working BUG .
         # label
         self.tx1 = Label(self.frame_right, text="Preview")
         self.tx1.grid(row=0, column=0, columnspan=3)
@@ -95,6 +95,21 @@ class UserInterface():
         self.frame_right.rowconfigure(3, weight=1)
         self.frame_right.columnconfigure(1, weight=1)
 
+        menu = Menu(self.root)
+        self.root.config(menu=menu)
+        file = Menu(menu)
+        file.add_command(label='Open File...', command=self.open_file_dialog)
+        file.add_command(label='Save File', command=self.save_file)
+        file.add_command(label='Save File As...', command=self.save_file_dialog)
+        file.add_command(label='Close file', command=self.close_file)
+        file.add_command(label='Exit', command=self.client_exit)
+        menu.add_cascade(label='File', menu=file)
+
+        menu_help = Menu(menu)
+        menu_help.add_command(label='About', command=self.about)
+        menu.add_cascade(label='Help', menu=menu_help)
+
+
         # sharp fonts in high res (https://stackoverflow.com/questions/41315873/
         # attempting-to-resolve-blurred-tkinter-text-scaling-on-windows-10-high-dpi-disp)
         if os.name == "nt":
@@ -108,8 +123,15 @@ class UserInterface():
         # root.rowconfigure(1, weight=1)
         for i in "Up,Down,Enter,Left".split(","):
             self.root.bind("<"+i+">", self.changeselection)
+        if os.name == "nt":
+            self.root.bind("<Control-s>", self.save_file)
+        else:
+            self.root.bind("<Command-s>", self.save_file)
 
-        self.updateTree()
+        if path:
+            self.open_file(path=path)
+
+        self.root.title("OpenKeynote (BETA) by Mathias Sønderskov")
 
         #self.root.bind("<Configure>", self.resizeui)
         self.width = 1200
@@ -123,6 +145,12 @@ class UserInterface():
         self.root.after(0, self.fixUI)
         self.root.mainloop()
 
+    def client_exit(self):
+        exit()
+
+    def about(self):
+        print("OpenKeynote by Mathias Sønderskov")
+
     def fixUI(self):
         if os.name != "nt":
             """
@@ -134,118 +162,10 @@ class UserInterface():
             h = int(b[1])
             self.root.geometry('%dx%d' % (w+1, h+1))
 
-    def open_file(self, button):
-        if (self._filehandler.open_file()):
-            self.e1.delete("1.0", END)
-            self.e2.delete("1.0", END)
-
-    def changeselection(self, button):
-        """
-        what happens when changing selection in the treeview..
-        """
-        itemlist = self._filehandler.itemlist
-        itemname = self.l1.focus()
-        if len(itemlist) == 0:
-            return
-
-        self.previeweditem = self.l1.focus()
-        try:
-            parentname = [i["parent"]
-                          for i in itemlist if i["name"] == itemname][0]
-            index = [i for i, j in enumerate(
-                itemlist) if j["name"] == itemname][0]
-        except IndexError:
-            parentname = itemlist[0]["name"]
-            index = 0
-        if len(parentname) > 1:
-            self.tx1.config(text="previewing: {} ( parent: {} )".format(
-                itemname, parentname))
-        else:
-            self.tx1.config(text="previewing: {}".format(itemname))
-
-        self.e1.delete("1.0", END)
-        self.e1.insert(END, itemlist[index]["content"])
-
-    def edititem(self, button):
-        """
-        copies text from e1 to e2
-        """
-        itemlist = self._filehandler.itemlist
-        self.e2.delete("1.0", END)
-        self.e2.insert(END, self.e1.get("1.0", END))
-
-        self.editeditem = self.previeweditem
-        name = self.editeditem
-        self.parentname = [i["parent"] for i in itemlist if i["name"] == name]
-        index = [i for i, j in enumerate(itemlist) if j["name"] == name]
-        # TODO eventualt [0] after name] above 2 lines.
-        if len(self.parentname) > 1:
-            self.tx2.config(text="Editing: {} ( parent: {} )".format(
-                name, parentname))
-        else:
-            self.tx2.config(text="Editing: {}".format(name))
-
-    def treeview_sort_column(self, tv, col, reverse):
-        object = self.l1
-        l = [(object.set(k, col), k) for k in object.get_children('')]
-        l.sort(reverse=reverse)
-
-        # rearrange items in sorted positions
-        for index, (val, k) in enumerate(l):
-            object.move(k, '', index)
-
-        # reverse sort next time
-        #TODO
-        object.heading(col, command=lambda: \
-                   self.treeview_sort_column(tv, col, not reverse))
-
-    def saveitem(self, button):
-        """
-        saves text from gui back into main dictionary
-        and redraws tree, and selects where we were.
-        1) resave Dictionary
-        2) update "edit field"
-        """
-
-        newcontent = self.e2.get("1.0", END)
-        for i, k in enumerate(self.itemlist):    # update Dictionary
-            if k["name"] == self.editeditem:
-                self._filehandler.itemlist[i]["content"] = newcontent
-        if self.previeweditem == self.editeditem:
-            self.e1.delete("1.0", END)
-            self.e1.insert(END, newcontent)
-
-    def __str__(self):
-        text = []
-        for i in self.itemlist[0:5]:
-            text.append(f"name: {i['name']}, \tcontent: {i['content']}, \
-                \tparent: {i['parent']}")
-        return "\n".join(text)
-
-    def updateTree(self):
-        self.itemlist = self._filehandler.itemlist  # gets from FileHandler
-        itemlist = self.itemlist[:]   # temp list that we can delete from
-
-        uniquenames = set()
-        while len(itemlist) > 0:
-            for i, item in enumerate(itemlist):
-                parent = item["parent"]
-                if parent == "":
-                    try:
-                        self.l1.insert(
-                            '', 'end', item["name"], text=item["name"])
-                    except TclError:
-                        print(f'Error: Tried to add item {item["name"]}, but it\
-                        was already in the list')
-                    del itemlist[i]
-                    uniquenames.add(item["name"])
-                elif parent in uniquenames:  # it exists, so lets add to it.
-                    self.l1.insert(item["parent"], 'end',
-                                   item["name"], text=item["name"])
-                    del itemlist[i]
-                    uniquenames.add(item["name"])
-        print("updated tree...")
-
     def resizeui(self):
         # print("newsize")
         pass
+
+if __name__ == '__main__':
+    from main import main
+    main()

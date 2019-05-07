@@ -15,48 +15,31 @@ class FileHandler():
     """
 
     def __init__(self, path=None, prebackup=True):
+        self._folder = ""
         self._dict = {}
         self.path = path
         self.itemlist = []
 
         self._prebackup = prebackup
 
-        self.path = self.path.replace("\\", "/")
-
-        if self.path == None:
-            self.open_file()
-        else:
-            self.open_file(path=path)
-
-        self._folder = "/".join(self.path.split("/")[:-1])
-        self._filename = self.path.split("/")[-1]
-        self._bkfolder = self._folder + "/KNOTE_backups"
+        if self.path != None:
+            self.path = self.path.replace("\\", "/")
+            self._folder = "/".join(self.path.split("/")[:-1])
+            self._filename = self.path.split("/")[-1]
+            self._bkfolder = self._folder + "/KNOTE_backups"
 
         if self._prebackup == True:
-            print(f"Trying to backup to {self._bkfolder}")
-            self.createbackup(self._folder, self._filename, self._bkfolder)
+            try:
+                print(f"Trying to backup to {self._bkfolder}")
+                self.createbackup(self._folder, self._filename, self._bkfolder)
+            except AttributeError:
+                pass
 
         #self.open_file()
 
-    def open_file(self, button=None, path=None):
-        # if self.path != None:
-        #    self.close_file()
-        if path == None:
-            self.path = filedialog.askopenfilename(
-                initialdir="/",
-                title="Open File",
-                filetypes=(("text files", "*.txt"), ("All files", "*.*")))
-            if self.path == "":
-                print("Canceled file open")
-                return False
-            print(f"Opening {self.path}")
-
-            # Encoding stuff : https://www.devdungeon.com/content/working-binary-data-python
-            self.itemlist = []
-        else:
-            self.path = path
-
-        with open(self.path, "r", encoding="utf-16", newline="") as f:
+    def read_file(self, path = ""):
+        templist = []
+        with open(path, "r", encoding="utf-16", newline="") as f:
             chars = f.read().split("\r")
 
             for chunk in chars:
@@ -72,12 +55,13 @@ class FileHandler():
                     parent = chunk[1:].strip().split("\t")[2].strip()
                 except IndexError:
                     parent = ""
-                self.itemlist.append(
+                templist.append(
                     {"name": name, "content": content, "parent": parent})
-            self.itemlist = sorted(self.itemlist, key=lambda i: i['name'] in self.itemlist)
+            templist = sorted(templist, key=lambda i: i['name'] in templist)
+        self.itemlist = templist
         return True
 
-    def close_file(self):
+    def clear_memory(self):
         """
         Closes current file
         """
@@ -102,14 +86,15 @@ class FileHandler():
         except FileNotFoundError as e:
             print(f"Error: Can't create backup!! ( {e} )")
 
-    def save_file(self, button):
+    def write_file(self, path = ""):
         """
         Saves file! WIP
         """
-        # TODO self.path ...
-        filepath = self._folder + "/" + "KEYTESTout.txt"
+        if path == "":
+            return
+        path = path + ".test"
         try:
-            with open(filepath, 'w', newline='') as f:
+            with open(path, 'w', newline='') as f:
                 for i, item in enumerate(self.itemlist):
                     if len(item["name"]) > 0:
                         f.write(item["name"] + "\t")
@@ -118,6 +103,10 @@ class FileHandler():
                         f.write("\t" + item["parent"])
                     if i < len(self.itemlist)-1:
                         f.write("\r\n")
-            print(f"Successfully saved to {filepath}")
+            print(f"Successfully saved to {path}")
         except:
             print("Error trying to save the file")
+
+if __name__ == '__main__':
+    from main import main
+    main()
