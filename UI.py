@@ -14,9 +14,21 @@ class UserInterface(UIfunctions):
         self.previeweditem = ""
         self.editeditem = ""
 
+        self.mainframe = Frame(self.root)
+        self.mainframe.grid(column=0, row=0, sticky=E+W+N+S)
+        self.bottomframe = Frame(self.root)
+        self.bottomframe.grid(column=0, row=1, sticky=E+W)
+        self.statusbar = Label(self.bottomframe, text="Test", anchor=W)
+        self.statusbar.pack(fill=BOTH, padx=10)
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+        self.root.rowconfigure(1, pad=10)
 
-        self.pw = PanedWindow(self.root, orient=HORIZONTAL)
+
+        self.pw = PanedWindow(self.mainframe, orient=HORIZONTAL)
         self.pw.pack(fill=BOTH, expand=1)
+
+
 
         self.pane_left = Frame(self.root)
         self.pw.add(self.pane_left)
@@ -26,21 +38,26 @@ class UserInterface(UIfunctions):
         self.pw.add(self.pane_right)
 
         self.frame_left = Frame(self.pane_left)
-        self.frame_left.pack(fill=BOTH, expand=1)
+        self.frame_left.pack(fill=BOTH, expand=1, padx=3, pady=3)
         self.frame_center = Frame(self.pane_right)
         self.frame_center.grid(row=0, column=0, sticky=W+N, rowspan=4)
-        self.frame_right = Frame(self.pane_right, borderwidth=5,
-                                 relief="solid")
-        self.frame_right.grid(row=0, column=1, sticky=W+E+N+S)
-        self.sf1 = Text(self.frame_left, height=1, width=12, borderwidth=2,
+        self.frame_right = Frame(self.pane_right)
+        self.frame_right.grid(row=0, column=1, sticky=W+E+N+S, padx=3, pady=3)
+        self.pane_right.columnconfigure(1, weight=1)
+        self.pane_right.rowconfigure(0, weight=1)
+        self.sf1 = Text(self.frame_left, height=1, width=25, borderwidth=1,
                         relief="solid", highlightthickness=0)
-        self.sf1.grid(row=0, column=0)
-        self.sb1 = Button(self.frame_left, text="SAVEFILE", width=10)
-        self.sb1.grid(row=0, column=1)
-        self.sb1.bind("<ButtonRelease-1>", self.save_file_dialog)
-        self.sb2 = Button(self.frame_left, text="OPENFILE", width=3)
-        self.sb2.grid(row=0, column=2)
-        self.sb2.bind("<ButtonRelease-1>", self.open_file_dialog)
+        self.sf1.grid(row=0, column=0, sticky=W+E+N+S, pady = 5)
+        #self.sb1 = Button(self.frame_left, text="SAVEFILE", width=10)
+        #self.sb1.grid(row=0, column=1)
+        self.cs = Button(self.frame_left, text="X", width=1)
+        self.cs.grid(row=0, column=1)
+        #self.sb1.bind("<ButtonRelease-1>", self.save_file_dialog)
+        #self.sb2 = Button(self.frame_left, text="OPENFILE", width=10)
+        #self.sb2.grid(row=0, column=2)
+        #self.sb2.bind("<ButtonRelease-1>", self.open_file_dialog)
+        self.frame_left.columnconfigure(0, weight=1)
+
 
         # Setup treebar and scroll
         self.l1 = ttk.Treeview(self.frame_left, show="tree")
@@ -48,14 +65,12 @@ class UserInterface(UIfunctions):
         self.yscroll.config(width=10)
         self.l1['yscrollcommand'] = self.yscroll.set
         self.yscroll['command'] = self.l1.yview
-        self.l1.grid(row=1, column=0, columnspan=3,  padx=(30),
-                     pady=(10), sticky=N+S+E+W)
+        self.l1.grid(row=1, column=0, columnspan=3,  padx=30,
+                     pady=10, sticky=N+S+E+W)
         self.yscroll.grid(row=1, column=0, columnspan=3, sticky=N+S+E)
         self.l1.bind("<ButtonRelease-1>", self.changeselection)
 
         self.frame_left.rowconfigure(1, weight=1)
-        self.frame_left.columnconfigure(0, weight=1)
-        self.frame_left.columnconfigure(1, weight=1)
 
         self.vbs = []  # Vertical bar
         middlebuttons = ("New*", "New Sub*", "Delete*",
@@ -73,14 +88,14 @@ class UserInterface(UIfunctions):
         self.tx2 = Label(self.frame_right, text="Editing")
         self.tx2.grid(row=2, column=0)
 
-        self.e1 = Text(self.frame_right, fg="#555", font=("Courier", 15),
+        self.e1 = Text(self.frame_right, fg="#555", font=("Courier", 13),
                        padx=10, pady=10, highlightthickness=0,
                        borderwidth=1, relief="solid")
         self.e1.grid(row=1, column=0, columnspan=3, sticky=N+S+E+W)
 
-        self.e2 = Text(self.frame_right, font=("Courier", 15), borderwidth=3,
+        self.e2 = Text(self.frame_right, font=("Courier", 13), borderwidth=1,
                        relief="solid", padx=10, pady=10, highlightthickness=0)
-        self.e2.grid(row=3, column=0, columnspan=3, sticky=N+S+E+W)
+        self.e2.grid(row=3, column=0, columnspan=3, sticky=E+W+S+N)
 
         self.vb1 = Button(self.frame_right, text="Edit")
         self.vb1.grid(row=2, column=1)
@@ -89,11 +104,11 @@ class UserInterface(UIfunctions):
         self.vb2.grid(row=2, column=2)
         self.vb2.bind("<ButtonRelease-1>", self.saveitem)
 
-        self.frame_right.rowconfigure(0, weight=1)
-        self.frame_right.rowconfigure(1, weight=2)
-        self.frame_right.rowconfigure(2, weight=1)
+        #self.frame_right.rowconfigure(0, weight=1)
+        self.frame_right.rowconfigure(1, weight=1)
+        #self.frame_right.rowconfigure(2, weight=1)
         self.frame_right.rowconfigure(3, weight=1)
-        self.frame_right.columnconfigure(1, weight=1)
+        self.frame_right.columnconfigure(0, weight=1)
 
         menu = Menu(self.root)
         self.root.config(menu=menu)
@@ -119,8 +134,6 @@ class UserInterface(UIfunctions):
             except Exception:
                 pass  # this will fail on Windows Server and maybe early Windows
 
-        #root.columnconfigure(1, weight=1)
-        # root.rowconfigure(1, weight=1)
         for i in "Up,Down,Enter,Left".split(","):
             self.root.bind("<"+i+">", self.changeselection)
         if os.name == "nt":
@@ -134,16 +147,21 @@ class UserInterface(UIfunctions):
         self.root.title("OpenKeynote (BETA) by Mathias Sønderskov")
 
         #self.root.bind("<Configure>", self.resizeui)
-        self.width = 1200
-        self.height = 800
+        self.width = int(self.root.winfo_screenwidth()-500)
+        self.height = int(self.root.winfo_screenheight()-500)
         self.root.winfo_width()
         self.root.winfo_height()
         self.x = (self.root.winfo_screenwidth() // 2) - (self.width // 2)
+        self.x = 0
         self.y = (self.root.winfo_screenheight() // 2) - (self.height // 2)
+        self.y = 50
         self.root.geometry(f"{self.width}x{self.height}+{self.x}+{self.y}")
         self.root.update()
         self.root.after(0, self.fixUI)
         self.root.mainloop()
+
+    def status(self, message):
+        self.statusbar = message
 
     def client_exit(self):
         exit()
