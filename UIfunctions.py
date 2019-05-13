@@ -11,20 +11,20 @@ class UIfunctions():
     Handles all the UI functions. called by UI.py
     """
 
-
     def open_file_dialog(self,button=""):
         path = filedialog.askopenfilename(
             initialdir=self._filehandler._folder,
             title="Open File",
             filetypes=(("text files", "*.txt"), ("All files", "*.*")))
         if path == "" or path == None:
-            print("Canceled file open")
+            #print("Canceled file open")
+            self._filehandler.setstatus("Cancelled file open")
             return False
         else:
             self.open_file(path = path)
 
     def open_file(self, path):
-        print(f"Opening {path}")
+        self._filehandler.setstatus(f"Opening {path}")
         self._filehandler.itemlist = []
         self.itemlist = []
         self._filehandler.path = path
@@ -42,20 +42,23 @@ class UIfunctions():
             self._filehandler.path = path
             self.save_file(path=path)
 
+    def new_file(self, button=""):
+        self._filehandler.setstatus("Missing New file function")
+
     def add_item(self, button=""):
-        print("TODO: Add button")
+        self._filehandler.setstatus("TODO: Add button")
 
     def add_subitem(self, button=""):
-        print("TODO: Add sub item")
+        self._filehandler.setstatus("TODO: Add sub item")
 
     def delete_item(self, button=""):
-        print("TODO: Delete item")
+        self._filehandler.setstatus("TODO: Delete item")
 
     def rename_item(self, button=""):
-        print("TODO: Rename item")
+        self._filehandler.setstatus("TODO: Rename item")
 
     def change_parent(self, button=""):
-        print("TODO: Change parent")
+        self._filehandler.setstatus("TODO: Change parent")
 
     def save_file(self, button="", path=""):
         if path != "":
@@ -64,7 +67,7 @@ class UIfunctions():
             if self._filehandler.path != "" and self._filehandler.path != None:
                 self._filehandler.write_file(self._filehandler.path)
             else:
-                print("tried to save unknown path")
+                self._filehandler.setstatus("tried to save unknown path")
 
     def changeselection(self, button):
         """
@@ -162,8 +165,8 @@ class UIfunctions():
                         self.l1.insert(
                             '', 'end', item["name"], text=item["name"])
                     except TclError:
-                        print(f'Error: Tried to add item {item["name"]}, but it\
-                        was already in the list')
+                        self._filehandler.setstaus(f'Error: Tried to add item\
+                         {item["name"]}, but it was already in the list')
                     del itemlist[i]
                     uniquenames.add(item["name"])
                 elif parent in uniquenames:  # it exists, so lets add to it.
@@ -171,7 +174,6 @@ class UIfunctions():
                                    item["name"], text=item["name"])
                     del itemlist[i]
                     uniquenames.add(item["name"])
-        print("Updated tree!")
         print(self)
 
     def close_file(self):

@@ -19,6 +19,9 @@ class FileHandler():
         self._dict = {}
         self.path = path
         self.itemlist = []
+        self.status_standard = "Copyright Mathias Sønderskov Nielsen 2019"
+        self.statustext = self.status_standard
+        self.statustimer = 0
 
         self._prebackup = prebackup
 
@@ -30,7 +33,7 @@ class FileHandler():
 
         if self._prebackup == True:
             try:
-                print(f"Trying to backup to {self._bkfolder}")
+                self.status= f"Trying to backup to {self._bkfolder}"
                 self.createbackup(self._folder, self._filename, self._bkfolder)
             except AttributeError:
                 pass
@@ -85,6 +88,18 @@ class FileHandler():
             copyfile(folder + "/" + filename, targetfile)
         except FileNotFoundError as e:
             print(f"Error: Can't create backup!! ( {e} )")
+
+    def getstatus(self):
+        if self.statustimer < 20:
+            self.statustimer += 1
+        else:
+            self.statustimer = 0
+            self.statustext = self.status_standard
+        return self.statustext
+
+    def setstatus(self, message=""):
+        self.statustext = message
+        self.statustimer = 0
 
     def write_file(self, path = ""):
         """

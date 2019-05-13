@@ -14,12 +14,14 @@ class UserInterface(UIfunctions):
         self.previeweditem = ""
         self.editeditem = ""
 
+        self.root.after(100, self.status)
+
         self.mainframe = Frame(self.root)
         self.mainframe.grid(column=0, row=0, sticky=E+W+N+S)
         self.bottomframe = Frame(self.root)
         self.bottomframe.grid(column=0, row=1, sticky=E+W)
-        self.statusbar = Label(self.bottomframe, text="Test", anchor=W)
-        self.statusbar.pack(fill=BOTH, padx=10)
+        self.statusbar = Label(self.bottomframe, text=self._filehandler.statustext, anchor=W)
+        self.statusbar.pack(fill=BOTH, padx=0, pady=0)
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         self.root.rowconfigure(1, pad=10)
@@ -80,9 +82,7 @@ class UserInterface(UIfunctions):
         for a, button_text in enumerate(middlebuttons):
             self.vbs.append(Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)
-            self.vbs[a].bind("ButtonRelease-1", middlefunctions[a])
-            #TODO: Binds not working BUG .
-        # label
+            self.vbs[a].bind("<ButtonRelease-1>", middlefunctions[a])
         self.tx1 = Label(self.frame_right, text="Preview")
         self.tx1.grid(row=0, column=0, columnspan=3)
         self.tx2 = Label(self.frame_right, text="Editing")
@@ -104,15 +104,14 @@ class UserInterface(UIfunctions):
         self.vb2.grid(row=2, column=2)
         self.vb2.bind("<ButtonRelease-1>", self.saveitem)
 
-        #self.frame_right.rowconfigure(0, weight=1)
         self.frame_right.rowconfigure(1, weight=1)
-        #self.frame_right.rowconfigure(2, weight=1)
         self.frame_right.rowconfigure(3, weight=1)
         self.frame_right.columnconfigure(0, weight=1)
 
         menu = Menu(self.root)
         self.root.config(menu=menu)
         file = Menu(menu)
+        file.add_command(label='New File*', command=self.new_file)
         file.add_command(label='Open File...', command=self.open_file_dialog)
         file.add_command(label='Save File', command=self.save_file)
         file.add_command(label='Save File As...', command=self.save_file_dialog)
@@ -144,9 +143,8 @@ class UserInterface(UIfunctions):
         if path:
             self.open_file(path=path)
 
-        self.root.title("OpenKeynote (BETA) by Mathias Sønderskov")
+        self.root.title("OpenKeynote (BETA)")
 
-        #self.root.bind("<Configure>", self.resizeui)
         self.width = int(self.root.winfo_screenwidth()-500)
         self.height = int(self.root.winfo_screenheight()-500)
         self.root.winfo_width()
@@ -160,14 +158,25 @@ class UserInterface(UIfunctions):
         self.root.after(0, self.fixUI)
         self.root.mainloop()
 
-    def status(self, message):
-        self.statusbar = message
+    def status(self, dummy=None):
+        text = self._filehandler.getstatus()
+        self.statusbar.config(text=text)
+        self.root.after(100, self.status)
 
     def client_exit(self):
         exit()
 
     def about(self):
-        print("OpenKeynote by Mathias Sønderskov")
+        newframe = Tk()
+        newlabel = Label(newframe, text="OpenKeynote by Mathias Sønderskov "\
+        "Nielsen.\nFor more info check out www.github.com/sonderwoods")
+        newlabel.pack(fill=BOTH, padx = 40, pady=40)
+        newframe.title("About OpenKeynote")
+        width = 500
+        height = 150
+        x = (newframe.winfo_screenwidth() // 2) - (width // 2)
+        y = (newframe.winfo_screenheight() // 2) - (height // 2)
+        newframe.geometry(f"{width}x{height}+{x}+{y}")
 
     def fixUI(self):
         if os.name != "nt":
@@ -180,9 +189,6 @@ class UserInterface(UIfunctions):
             h = int(b[1])
             self.root.geometry('%dx%d' % (w+1, h+1))
 
-    def resizeui(self):
-        # print("newsize")
-        pass
 
 if __name__ == '__main__':
     from main import main
