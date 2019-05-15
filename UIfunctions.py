@@ -42,11 +42,60 @@ class UIfunctions():
             self._filehandler.path = path
             self.save_file(path=path)
 
+    def about(self):
+        newframe = Tk()
+        newlabel = Label(newframe, text="OpenKeynote by Mathias Sønderskov "\
+        "Nielsen.\nFor more info check out www.github.com/sonderwoods")
+        newlabel.pack(fill=BOTH,padx = 40, pady=15)
+        newframe.title("About OpenKeynote")
+        bt1 = Button(newframe, text="Ok", command=newframe.destroy)
+        bt1.pack(fill=BOTH,padx = 40, pady=10)
+        width = 500
+        height = 120
+        x = (newframe.winfo_screenwidth() // 2) - (width // 2)
+        y = (newframe.winfo_screenheight() // 2) - (height // 2)
+        newframe.geometry(f"{width}x{height}+{x}+{y}")
+
     def new_file(self, button=""):
         self._filehandler.setstatus("Missing New file function")
 
-    def add_item(self, button=""):
-        self._filehandler.setstatus("TODO: Add button")
+    def add_item(self, button="", parent=""):
+        newframe = Tk()
+        newframe.title("Add an item")
+        namelabel = Label(newframe, text="Name:")
+        namelabel.grid(row=1, column=0)
+        catlabel = Label(newframe, text="Parent (category):")
+        catlabel.grid(row=2, column=0)
+
+        contentlabel = Label(newframe, text="Content")
+        contentlabel.grid(row=3, column=0)
+        nametext = Text(newframe, font=("Courier", 13),
+                       padx=10, pady=10, highlightthickness=1,
+                       borderwidth=1, relief="solid", height=1)
+        nametext.grid(row=1, column=1, sticky=E+W)
+        cattext = Text(newframe, font=("Courier", 13),
+                       padx=10, pady=10, highlightthickness=1,
+                       borderwidth=1, relief="solid", height=1)
+        cattext.grid(row=2, column=1, sticky=E+W)
+
+        contenttext = Text(newframe, font=("Courier", 13),
+                       padx=10, pady=10, highlightthickness=1,
+                       borderwidth=1, relief="solid")
+        contenttext.grid(row=3, column=1, sticky=N+S+E+W)
+        newframe.columnconfigure(1, weight=1)
+        newframe.rowconfigure(3, weight=1)
+        okbtn = ttk.Button(newframe, text="OK** (not working)", width=10)
+        okbtn.grid(row=4, column=0, sticky=N+S+E+W)
+        cattext.insert(END, parent)
+        cancelbtn = ttk.Button(newframe, text="Cancel", command=newframe.destroy)
+        cancelbtn.grid(row=4, column=1, sticky=N+S+E+W)
+        newname = nametext.get("1.0", END)
+        newparent = cattext.get("1.0", END)
+        newcontext = contenttext.get("1.0", END)
+
+        self._filehandler.add_item(newname, newparent, newcontext)
+
+
 
     def add_subitem(self, button=""):
         self._filehandler.setstatus("TODO: Add sub item")
@@ -95,6 +144,7 @@ class UIfunctions():
 
         self.e1.delete("1.0", END)
         self.e1.insert(END, itemlist[index]["content"])
+        self.parentname = parentname
 
     def edititem(self, button):
         """
@@ -151,6 +201,21 @@ class UIfunctions():
             text.append(f"name: {i['name']}, \tcontent: {i['content']}, \
                 \tparent: {i['parent']}")
         return "\n".join(text)
+
+    def fixUI(self, win=None):
+        """
+        Resizes with 1 pixel to avoid mainUI bugs in mojave
+        """
+        if os.name != "nt":
+            if win == None:
+                win = self.root
+
+            a = win.winfo_geometry().split('+')[0]
+            print(a)
+            b = a.split('x')
+            w = int(b[0])
+            h = int(b[1])
+            win.geometry('{}x{}'.format(w+1, h+1))
 
     def updateTree(self):
         self.itemlist = self._filehandler.itemlist  # gets from FileHandler

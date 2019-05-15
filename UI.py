@@ -77,8 +77,10 @@ class UserInterface(UIfunctions):
         self.vbs = []  # Vertical bar
         middlebuttons = ("New*", "New Sub*", "Delete*",
                          "Rename*", "Change Parent*")
-        middlefunctions = (self.add_item, self.add_subitem, self.delete_item,
-            self.rename_item, self.change_parent)
+        middlefunctions = (
+            lambda add: self.add_item(parent=self.parentname),
+            lambda add: self.add_item(parent=self.previeweditem),
+            self.delete_item, self.rename_item, self.change_parent)
         for a, button_text in enumerate(middlebuttons):
             self.vbs.append(Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)
@@ -142,9 +144,16 @@ class UserInterface(UIfunctions):
 
         if path:
             self.open_file(path=path)
-
         self.root.title("OpenKeynote (BETA)")
 
+        """ TODO: ICON /Windows
+
+        self.root.iconbitmap("/Users/msn/Dropbox/py/Git/OpenKeynote/images/ico.icns")
+
+        img = Image("photo", file="/Users/msn/Dropbox/py/Git/OpenKeynote/images/large.gif")
+        self.root.iconphoto(True, img) # you may also want to try this.
+        self.root.call('wm','iconphoto', self.root._w, img)
+        """
         self.width = int(self.root.winfo_screenwidth()-500)
         self.height = int(self.root.winfo_screenheight()-500)
         self.root.winfo_width()
@@ -159,6 +168,9 @@ class UserInterface(UIfunctions):
         self.root.mainloop()
 
     def status(self, dummy=None):
+        """
+        Set statusbar in bottom of the window
+        """
         text = self._filehandler.getstatus()
         self.statusbar.config(text=text)
         self.root.after(100, self.status)
@@ -166,28 +178,9 @@ class UserInterface(UIfunctions):
     def client_exit(self):
         exit()
 
-    def about(self):
-        newframe = Tk()
-        newlabel = Label(newframe, text="OpenKeynote by Mathias Sønderskov "\
-        "Nielsen.\nFor more info check out www.github.com/sonderwoods")
-        newlabel.pack(fill=BOTH, padx = 40, pady=40)
-        newframe.title("About OpenKeynote")
-        width = 500
-        height = 150
-        x = (newframe.winfo_screenwidth() // 2) - (width // 2)
-        y = (newframe.winfo_screenheight() // 2) - (height // 2)
-        newframe.geometry(f"{width}x{height}+{x}+{y}")
 
-    def fixUI(self):
-        if os.name != "nt":
-            """
-            Resizes with 1 pixel to avoid mainUI bugs in mojave
-            """
-            a = self.root.winfo_geometry().split('+')[0]
-            b = a.split('x')
-            w = int(b[0])
-            h = int(b[1])
-            self.root.geometry('%dx%d' % (w+1, h+1))
+
+
 
 
 if __name__ == '__main__':

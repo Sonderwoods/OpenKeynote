@@ -89,6 +89,10 @@ class FileHandler():
         except FileNotFoundError as e:
             print(f"Error: Can't create backup!! ( {e} )")
 
+    def add_item(self, name, parent, content):
+        print("not yet")
+
+
     def getstatus(self):
         if self.statustimer < 20:
             self.statustimer += 1
