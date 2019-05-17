@@ -16,6 +16,10 @@ class UserInterface(UIfunctions):
 
         self.root.after(100, self.status)
 
+        ##################
+        ### PANED WINDOW
+        ##################
+
         self.mainframe = Frame(self.root)
         self.mainframe.grid(column=0, row=0, sticky=E+W+N+S)
         self.bottomframe = Frame(self.root)
@@ -25,19 +29,16 @@ class UserInterface(UIfunctions):
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         self.root.rowconfigure(1, pad=10)
-
-
         self.pw = PanedWindow(self.mainframe, orient=HORIZONTAL)
         self.pw.pack(fill=BOTH, expand=1)
-
-
-
         self.pane_left = Frame(self.root)
         self.pw.add(self.pane_left)
-
         self.pane_right = Frame(self.root)
-
         self.pw.add(self.pane_right)
+
+        ##################
+        ### FRAMES (IN THE PANES)
+        ##################
 
         self.frame_left = Frame(self.pane_left)
         self.frame_left.pack(fill=BOTH, expand=1, padx=3, pady=3)
@@ -49,13 +50,15 @@ class UserInterface(UIfunctions):
         self.pane_right.rowconfigure(0, weight=1)
         self.sf1 = Text(self.frame_left, height=1, width=25, borderwidth=1,
                         relief="solid", highlightthickness=0)
+        self.sf1.insert(1.0, "TODO: Searchbar")
         self.sf1.grid(row=0, column=0, sticky=W+E+N+S, pady = 5)
         self.cs = Button(self.frame_left, text="X", width=1)
         self.cs.grid(row=0, column=1)
         self.frame_left.columnconfigure(0, weight=1)
 
-
-        # Setup treebar and scroll
+        ##################
+        ### TREE VIEW
+        ##################
         self.l1 = ttk.Treeview(self.frame_left, show="tree")
         self.yscroll = Scrollbar(self.frame_left, orient=VERTICAL)
         self.yscroll.config(width=10)
@@ -68,9 +71,13 @@ class UserInterface(UIfunctions):
 
         self.frame_left.rowconfigure(1, weight=1)
 
-        self.vbs = []  # Vertical bar
-        middlebuttons = ("New", "New Sub", "Delete*",
-                         "Rename*", "Change Parent*")
+
+        ##################
+        ### VERTICAL BAR
+        ##################
+        self.vbs = []
+        middlebuttons = ("New Item", "New Subitem", "Delete",
+                         "Rename", "Change Parent*")
         middlefunctions = (
             lambda: self.add_item(parent=self.parentname),
             lambda: self.add_item(parent=self.previeweditem),
@@ -78,25 +85,49 @@ class UserInterface(UIfunctions):
         for a, button_text in enumerate(middlebuttons):
             self.vbs.append(ttk.Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)
-            self.vbs[a].config(command=middlefunctions[a])
+            self.vbs[a].config(command=middlefunctions[a], width=20)
+        self.vbs[4].config(state=DISABLED)
         self.tx1 = Label(self.frame_right, text="Preview", anchor=W)
         self.tx1.grid(row=0, column=0, columnspan=3, sticky=W+E)
         self.tx2 = Label(self.frame_right, text="Editing", anchor=W)
         self.tx2.grid(row=2, column=0, sticky=W+E)
 
+
+        sv = StringVar()
         self.e1 = Text(self.frame_right, fg="#555", font=("Courier", 13),
                        padx=10, pady=10, highlightthickness=0,
                        borderwidth=1, relief="solid")
+
         self.e1.grid(row=1, column=0, columnspan=3, sticky=N+S+E+W)
 
         self.e2 = Text(self.frame_right, font=("Courier", 13), borderwidth=1,
                        relief="solid", padx=10, pady=10, highlightthickness=0)
         self.e2.grid(row=3, column=0, columnspan=3, sticky=E+W+S+N)
 
-        self.vb1 = Button(self.frame_right, text="Edit")
+        #############
+        ### BINDINGS
+        #############
+
+        if os.name == "nt":
+            CTRL = "Control"
+        else:
+            CTRL = "Command"
+
+        def bindings_key(event):
+            #if len(str(event.keysym)) == 1:
+            return("break")
+        self.e1.bind("<Key>", bindings_key)
+        self.e1.bind("<Tab>", lambda a:self.focus_on(target=self.e2))
+        self.e1.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.vbs[-1]))
+
+        self.e2.bind("<Tab>", lambda a:self.focus_on(target=self.vb1))
+        self.e2.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.e1))
+
+
+        self.vb1 = ttk.Button(self.frame_right, text="Edit")
         self.vb1.grid(row=2, column=1)
         self.vb1.config(command=self.edititem)
-        self.vb2 = Button(self.frame_right, text="Save")
+        self.vb2 = ttk.Button(self.frame_right, text="Save")
         self.vb2.grid(row=2, column=2)
         self.vb2.config(command=self.saveitem)
 
@@ -104,22 +135,54 @@ class UserInterface(UIfunctions):
         self.frame_right.rowconfigure(3, weight=1)
         self.frame_right.columnconfigure(0, weight=1)
 
+        ##################
+        ### MAIN MENU
+        ##################
         menu = Menu(self.root)
-
         self.root.config(menu=menu)
         file = Menu(menu)
-        file.add_command(label='New File*', command=self.new_file)
-        file.add_command(label='Open File...', command=self.open_file_dialog)
-        file.add_command(label='Save File', command=self.save_file)
+        file.add_command(label='New File*', accelerator=f"{CTRL}-n", command=self.new_file)
+        file.add_command(label='Open File...', accelerator=f"{CTRL}-o", command=self.open_file_dialog)
+        file.add_command(label='Save File', accelerator=f"{CTRL}-s", command=self.save_file)
         file.add_command(label='Save File As...', command=self.save_file_dialog)
         file.add_command(label='Close file', command=self.close_file)
-        file.add_command(label='Exit', command=self.client_exit)
+        file.add_command(label='Exit', accelerator=f"{CTRL}-q", command=self.client_exit)
         menu.add_cascade(label='File', menu=file)
+
+
+        self.clickmenu = Menu(self.root, tearoff=0)
+        self.clickmenu.add_command(label="Cut")
+        self.clickmenu.add_command(label="Copy")
+        self.clickmenu.add_command(label="Paste")
+        self.root.bind_class("Text", "<Button-2><ButtonRelease-2>", self.right_click_menu)
+
+
+
+        menu_edit = Menu(menu)
+        menu_edit.add_command(label='Select All', accelerator=f"{CTRL}-a",
+            command=self.select_all)
+        self.root.bind(f"<{CTRL}-a>", self.select_all)
+        self.e1.bind(f"<{CTRL}-a>", self.select_all)
+
+
+        self.e1.bind(f"<{CTRL}-c>", self.root.event_generate("<<Copy>>"))
+        self.e2.bind(f"<{CTRL}-a>", self.select_all)
+        menu_edit.add_command(label='Cut', accelerator=f"{CTRL}-x",
+            command=lambda: self.root.event_generate("<<Cut>>"))
+        menu_edit.add_command(label='Copy', accelerator=f"{CTRL}-c",
+            command=lambda: self.root.event_generate("<<Copy>>"))
+        menu_edit.add_command(label='Paste', accelerator=f"{CTRL}-v",
+            command=lambda: self.root.event_generate("<<Paste>>"))
+        menu.add_cascade(label='Edit', menu=menu_edit)
 
         menu_help = Menu(menu)
         menu_help.add_command(label='About', command=self.about)
         menu.add_cascade(label='Help', menu=menu_help)
 
+
+        ##################
+        ### MISC UI
+        ##################
 
         # sharp fonts in high res (https://stackoverflow.com/questions/41315873/
         # attempting-to-resolve-blurred-tkinter-text-scaling-on-windows-10-high-dpi-disp)
@@ -132,12 +195,9 @@ class UserInterface(UIfunctions):
 
         for i in "Up,Down,Enter,Left".split(","):
             self.root.bind("<"+i+">", self.changeselection)
-        if os.name == "nt":
-            ctrl = "Control"
-        else:
-            ctrl = "Command"
-        self.root.bind(f"<{ctrl}-s>", self.save_file)
-        self.root.bind(f"<{ctrl}-o>", self.open_file_dialog)
+
+        self.root.bind(f"<{CTRL}-s>", self.save_file)
+        self.root.bind(f"<{CTRL}-o>", self.open_file_dialog)
 
         if path:
             self.open_file(path=path)
@@ -164,6 +224,23 @@ class UserInterface(UIfunctions):
         self.root.after(0, self.fixUI)
         self.root.mainloop()
 
+
+
+
+
+    def right_click_menu(self, e=None):
+        #https://stackoverflow.com/a/8476726/11514850
+        w = e.widget
+        self.clickmenu.entryconfigure("Cut",
+        command=lambda: w.event_generate("<<Cut>>"))
+        self.clickmenu.entryconfigure("Copy",
+        command=lambda: w.event_generate("<<Copy>>"))
+        self.clickmenu.entryconfigure("Paste",
+        command=lambda: w.event_generate("<<Paste>>"))
+        self.clickmenu.tk.call("tk_popup", self.clickmenu, e.x_root, e.y_root)
+
+
+
     def status(self, dummy=None):
         """
         Set statusbar in bottom of the window
@@ -174,10 +251,6 @@ class UserInterface(UIfunctions):
 
     def client_exit(self):
         exit()
-
-
-
-
 
 
 if __name__ == '__main__':

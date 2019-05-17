@@ -114,6 +114,16 @@ class UIfunctions():
         self.cancelbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.okbtn))
 
 
+    def submit_item(self, button=""):
+        name = self.nametext.get("1.0", END).strip()
+        parent = self.cattext.get("1.0", END).strip()
+        content = self.contenttext.get("1.0", END).replace("\n\r", "\n").strip()
+        self._filehandler.add_item(name, parent, content)
+        #print(len(self._filehandler.itemlist))
+        self.updateTree(selection = name, parent = parent)
+        self.newframe.destroy()
+
+
     def focus_next(self, event=""):
         event.tk_focusNext().focus()
         return("break")
@@ -126,28 +136,53 @@ class UIfunctions():
         return("break")
 
 
-    def submit_item(self, button=""):
-        name = self.nametext.get("1.0", END).strip()
-        parent = self.cattext.get("1.0", END).strip()
-        content = self.contenttext.get("1.0", END).replace("\n\r", "\n").strip()
-        self._filehandler.add_item(name, parent, content)
-        print(len(self._filehandler.itemlist))
-        self.updateTree()
-        self.newframe.destroy()
-
-
-
-
-
 
     def add_subitem(self, button=""):
         self._filehandler.setstatus("TODO: Add sub item")
 
-    def delete_item(self, button=""):
-        self._filehandler.setstatus("TODO: Delete item")
 
-    def rename_item(self, button=""):
+
+    def rename_item(self, event=None):
+        label = "XX"
         self._filehandler.setstatus("TODO: Rename item")
+        x = self.root.winfo_pointerx()
+        y = self.root.winfo_pointery()
+        absx = self.root.winfo_pointerx() - self.root.winfo_rootx()
+        absy = self.root.winfo_pointery() - self.root.winfo_rooty()
+        self.rnframe = Tk()
+        self.rnframe.title(f"OpenKeyote - Renaming {label}")
+        self.rnframe.geometry(f"400x100+{x+50}+{y-20}")
+        namelabel = Label(self.rnframe, text=f"Renaming : {label}")
+        namelabel.grid(row=2, column=0, padx=10, pady=10)
+        self.rnname = Entry(self.rnframe, font=("Courier", 13),
+                       highlightthickness=1,
+                       borderwidth=1, relief="solid")
+        self.rnname.grid(row=2, column=1, sticky=E+W, padx=10, pady=10)
+
+        self.rnframe.columnconfigure(1, weight=1)
+        self.rnframe.rowconfigure(1, weight=1)
+        self.rnokbtn = ttk.Button(self.rnframe, text="OK", width=10)
+        self.rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
+        self.rnokbtn.config(command=self.submit_remame)
+        self.rncancelbtn = ttk.Button(self.rnframe, text="Cancel",
+            command=self.rnframe.destroy)
+        self.rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
+        self.rnframe.bind("<Escape>", lambda a: self.rnframe.destroy())
+        self.rnname.focus()
+
+        #Tried this using lists without luck.
+        self.rnname.bind("<Tab>", lambda a:self.focus_on(target=self.self.rnokbtn))
+        self.rnname.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.rncancelbtn))
+
+        self.rnokbtn.bind("<Tab>", lambda a:self.focus_on(target=self.rncancelbtn))
+        self.rnokbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.rnname))
+
+        self.rncancelbtn.bind("<Tab>", lambda a:self.focus_on(target=self.rnname))
+        self.rncancelbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.rnokbtn))
+
+    def submit_rename(self, event=None):
+        pass
+
 
     def change_parent(self, button=""):
         self._filehandler.setstatus("TODO: Change parent")
@@ -189,10 +224,32 @@ class UIfunctions():
         self.e1.insert(END, itemlist[index]["content"])
         self.parentname = parentname
         if len(self.parentname) > 0:
-            self.vbs[0].config(text=f"new ({self.parentname})")
+            self.vbs[0].config(text=f"New Item ({self.parentname})")
+            self.vbs[1].config(state=DISABLED)
         else:
-            self.vbs[0].config(text=f"new")
-        self.vbs[1].config(text=f"newsub ({self.previeweditem})")
+            self.vbs[0].config(text=f"New Item")
+        if len(self.get_all_children(self.l1, self.previeweditem)) > 0:
+            self.vbs[2].config(text=f"Delete {self.previeweditem} and subs")
+        else:
+            self.vbs[2].config(text=f"Delete {self.previeweditem}")
+        if len(self.previeweditem) > 0:
+            self.vbs[1].config(state=NORMAL)
+            self.vbs[1].config(text=f"New Subitem ({self.previeweditem})")
+        else:
+            self.vbs[1].config(state=DISABLED)
+            self.vbs[1].config(text=f"New Subitem")
+
+    def select_all(self, event=None):
+        self.root.focus_get().tag_add('sel', '1.0', 'end-1c')
+
+    # def copy_text(self, event=None):
+    #     print("x")
+    #     self.root.focus_get().event_generate("<<Copy>>")
+    #     cb = self.root.clipboard_get()
+    #     self.root.clipboard_clear()
+    #     self.root.clipboard_append(cb[:-2])
+
+
 
     def edititem(self, button=""):
         """
@@ -200,7 +257,7 @@ class UIfunctions():
         """
         itemlist = self._filehandler.itemlist
         self.e2.delete("1.0", END)
-        self.e2.insert(END, self.e1.get("1.0", END)[:-1])
+        self.e2.insert(END, self.e1.get("1.0", "end-1c"))
 
         self.editeditem = self.previeweditem
         name = self.editeditem
@@ -235,7 +292,7 @@ class UIfunctions():
         2) update "edit field"
         """
 
-        newcontent = self.e2.get("1.0", END)[:-1]
+        newcontent = self.e2.get("1.0", "end-1c")
         for i, k in enumerate(self.itemlist):    # update Dictionary
             if k["name"] == self.editeditem:
                 self._filehandler.itemlist[i]["content"] = newcontent
@@ -264,14 +321,38 @@ class UIfunctions():
             h = int(b[1])
             win.geometry('{}x{}'.format(w+1, h+1))
 
-    def updateTree(self):
+    def get_all_children(self,tree,item=""):
+        children = tree.get_children(item)
+        for child in children:
+            children += self.get_all_children(tree, child)
+        return children
+
+    def delete_item(self, button=""):
+        mytree = self.get_all_children(self.l1, self.previeweditem)
+        for i in mytree:
+           self._filehandler.delete_item(i)
+        self._filehandler.delete_item(self.previeweditem)
+        self.updateTree()
+
+    def updateTree(self, selection=None, parent=None, op=""):
+        if selection == None:
+            selection = self.l1.focus()
+
         self.itemlist = self._filehandler.itemlist  # gets from FileHandler
         itemlist = self.itemlist[:]   # temp list that we can delete from
         uniquenames = set()
         print(len(itemlist))
-        #for i in itemlist:
-        #    uniquenames.add(i["name"])
-        #    print(i["name"])
+        on_off_dict = {}
+        previous_tree = self.get_all_children(self.l1)
+        for item in previous_tree:
+            name = self.l1.item(item)['text']
+            open = self.l1.item(item)['open']
+            if open == 1:
+                open = True
+            else:
+                open = False
+            on_off_dict[name] = open
+
 
         self.l1.delete(*self.l1.get_children())
         while len(itemlist) > 0:
@@ -281,6 +362,16 @@ class UIfunctions():
                         try:
                             self.l1.insert(
                                 '', 'end', item["name"], text=item["name"])
+                            if op == "Expand":
+                                self.l1.item(item["name"], open=True)
+                            elif op == "Collapse":
+                                self.l1.item(item["name"], open=False)
+                            else:
+                                if item["name"] in on_off_dict.keys():
+                                    if on_off_dict[item["name"]]:
+                                        self.l1.item(item["name"], open=True)
+                                    else:
+                                        self.l1.item(item["name"], open=False)
                         except TclError:
                             self._filehandler.setstatus(f'Error: Tried to add item\
                              {item["name"]}, but it was already in the list')
@@ -293,6 +384,14 @@ class UIfunctions():
                         uniquenames.add(item["name"])
                 else:
                     del itemlist[i]
+        if parent != None and parent != "":
+            self.l1.item(parent, open=True)
+        self.l1.selection_clear()
+        self.l1.selection_set(selection)
+        self.l1.focus(selection)
+
+
+        #self.l1.focus_set
 
     def close_file(self):
         self.e1.delete("1.0", END)

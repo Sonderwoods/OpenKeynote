@@ -111,6 +111,13 @@ class FileHandler():
         self.statustext = message
         self.statustimer = 0
 
+    def delete_item(self, item=None):
+        for i, entry in enumerate(self.itemlist):
+            if item == entry["name"]:
+                self.itemlist.remove(entry)
+    def rename_item(self, item=None):
+        pass
+
     def write_file(self, path = ""):
         """
         Saves file! WIP
