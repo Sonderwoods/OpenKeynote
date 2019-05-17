@@ -48,6 +48,7 @@ class FileHandler():
             for chunk in chars:
                 try:
                     name = str(chunk[0:].split("\t")[0]).strip()
+                    name = name.replace("\t", "")
                 except IndexError:
                     name = ""
                 try:
@@ -62,6 +63,7 @@ class FileHandler():
                     {"name": name, "content": content, "parent": parent})
             templist = sorted(templist, key=lambda i: i['name'] in templist)
         self.itemlist = templist
+        self.setstatus(message="Successfully read file")
         return True
 
     def clear_memory(self):
@@ -90,7 +92,10 @@ class FileHandler():
             print(f"Error: Can't create backup!! ( {e} )")
 
     def add_item(self, name, parent, content):
-        print("not yet")
+        print(f"adding {name}, {parent}, {content}")
+        self.itemlist.append(
+            {"name": name, "content": content, "parent": parent})
+        self.setstatus(message=f"succesfully added: {name.strip()}")
 
 
     def getstatus(self):
@@ -102,6 +107,7 @@ class FileHandler():
         return self.statustext
 
     def setstatus(self, message=""):
+        print(message)
         self.statustext = message
         self.statustimer = 0
 

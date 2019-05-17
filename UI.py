@@ -50,14 +50,8 @@ class UserInterface(UIfunctions):
         self.sf1 = Text(self.frame_left, height=1, width=25, borderwidth=1,
                         relief="solid", highlightthickness=0)
         self.sf1.grid(row=0, column=0, sticky=W+E+N+S, pady = 5)
-        #self.sb1 = Button(self.frame_left, text="SAVEFILE", width=10)
-        #self.sb1.grid(row=0, column=1)
         self.cs = Button(self.frame_left, text="X", width=1)
         self.cs.grid(row=0, column=1)
-        #self.sb1.bind("<ButtonRelease-1>", self.save_file_dialog)
-        #self.sb2 = Button(self.frame_left, text="OPENFILE", width=10)
-        #self.sb2.grid(row=0, column=2)
-        #self.sb2.bind("<ButtonRelease-1>", self.open_file_dialog)
         self.frame_left.columnconfigure(0, weight=1)
 
 
@@ -75,20 +69,20 @@ class UserInterface(UIfunctions):
         self.frame_left.rowconfigure(1, weight=1)
 
         self.vbs = []  # Vertical bar
-        middlebuttons = ("New*", "New Sub*", "Delete*",
+        middlebuttons = ("New", "New Sub", "Delete*",
                          "Rename*", "Change Parent*")
         middlefunctions = (
-            lambda add: self.add_item(parent=self.parentname),
-            lambda add: self.add_item(parent=self.previeweditem),
+            lambda: self.add_item(parent=self.parentname),
+            lambda: self.add_item(parent=self.previeweditem),
             self.delete_item, self.rename_item, self.change_parent)
         for a, button_text in enumerate(middlebuttons):
-            self.vbs.append(Button(self.frame_center, text=button_text))
+            self.vbs.append(ttk.Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)
-            self.vbs[a].bind("<ButtonRelease-1>", middlefunctions[a])
-        self.tx1 = Label(self.frame_right, text="Preview")
-        self.tx1.grid(row=0, column=0, columnspan=3)
-        self.tx2 = Label(self.frame_right, text="Editing")
-        self.tx2.grid(row=2, column=0)
+            self.vbs[a].config(command=middlefunctions[a])
+        self.tx1 = Label(self.frame_right, text="Preview", anchor=W)
+        self.tx1.grid(row=0, column=0, columnspan=3, sticky=W+E)
+        self.tx2 = Label(self.frame_right, text="Editing", anchor=W)
+        self.tx2.grid(row=2, column=0, sticky=W+E)
 
         self.e1 = Text(self.frame_right, fg="#555", font=("Courier", 13),
                        padx=10, pady=10, highlightthickness=0,
@@ -101,16 +95,17 @@ class UserInterface(UIfunctions):
 
         self.vb1 = Button(self.frame_right, text="Edit")
         self.vb1.grid(row=2, column=1)
-        self.vb1.bind("<ButtonRelease-1>", self.edititem)
+        self.vb1.config(command=self.edititem)
         self.vb2 = Button(self.frame_right, text="Save")
         self.vb2.grid(row=2, column=2)
-        self.vb2.bind("<ButtonRelease-1>", self.saveitem)
+        self.vb2.config(command=self.saveitem)
 
         self.frame_right.rowconfigure(1, weight=1)
         self.frame_right.rowconfigure(3, weight=1)
         self.frame_right.columnconfigure(0, weight=1)
 
         menu = Menu(self.root)
+
         self.root.config(menu=menu)
         file = Menu(menu)
         file.add_command(label='New File*', command=self.new_file)
@@ -138,9 +133,11 @@ class UserInterface(UIfunctions):
         for i in "Up,Down,Enter,Left".split(","):
             self.root.bind("<"+i+">", self.changeselection)
         if os.name == "nt":
-            self.root.bind("<Control-s>", self.save_file)
+            ctrl = "Control"
         else:
-            self.root.bind("<Command-s>", self.save_file)
+            ctrl = "Command"
+        self.root.bind(f"<{ctrl}-s>", self.save_file)
+        self.root.bind(f"<{ctrl}-o>", self.open_file_dialog)
 
         if path:
             self.open_file(path=path)

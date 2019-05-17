@@ -60,40 +60,83 @@ class UIfunctions():
         self._filehandler.setstatus("Missing New file function")
 
     def add_item(self, button="", parent=""):
-        newframe = Tk()
-        newframe.title("Add an item")
-        namelabel = Label(newframe, text="Name:")
-        namelabel.grid(row=1, column=0)
-        catlabel = Label(newframe, text="Parent (category):")
-        catlabel.grid(row=2, column=0)
-
-        contentlabel = Label(newframe, text="Content")
+        x = self.root.winfo_pointerx()
+        y = self.root.winfo_pointery()
+        absx = self.root.winfo_pointerx() - self.root.winfo_rootx()
+        absy = self.root.winfo_pointery() - self.root.winfo_rooty()
+        self.newframe = Tk()
+        self.newframe.title("Add an item")
+        self.newframe.geometry(f"400x400+{x+50}+{y-20}")
+        catlabel = Label(self.newframe, text="Parent (category):")
+        catlabel.grid(row=1, column=0)
+        namelabel = Label(self.newframe, text="Name:")
+        namelabel.grid(row=2, column=0)
+        contentlabel = Label(self.newframe, text="Content")
         contentlabel.grid(row=3, column=0)
-        nametext = Text(newframe, font=("Courier", 13),
+        self.cattext = Text(self.newframe, font=("Courier", 13),
                        padx=10, pady=10, highlightthickness=1,
                        borderwidth=1, relief="solid", height=1)
-        nametext.grid(row=1, column=1, sticky=E+W)
-        cattext = Text(newframe, font=("Courier", 13),
+        self.cattext.grid(row=1, column=1, sticky=E+W)
+        self.nametext = Text(self.newframe, font=("Courier", 13),
                        padx=10, pady=10, highlightthickness=1,
                        borderwidth=1, relief="solid", height=1)
-        cattext.grid(row=2, column=1, sticky=E+W)
-
-        contenttext = Text(newframe, font=("Courier", 13),
+        self.nametext.grid(row=2, column=1, sticky=E+W)
+        self.contenttext = Text(self.newframe, font=("Courier", 13),
                        padx=10, pady=10, highlightthickness=1,
                        borderwidth=1, relief="solid")
-        contenttext.grid(row=3, column=1, sticky=N+S+E+W)
-        newframe.columnconfigure(1, weight=1)
-        newframe.rowconfigure(3, weight=1)
-        okbtn = ttk.Button(newframe, text="OK** (not working)", width=10)
-        okbtn.grid(row=4, column=0, sticky=N+S+E+W)
-        cattext.insert(END, parent)
-        cancelbtn = ttk.Button(newframe, text="Cancel", command=newframe.destroy)
-        cancelbtn.grid(row=4, column=1, sticky=N+S+E+W)
-        newname = nametext.get("1.0", END)
-        newparent = cattext.get("1.0", END)
-        newcontext = contenttext.get("1.0", END)
+        self.contenttext.grid(row=3, column=1, sticky=N+S+E+W)
+        self.newframe.columnconfigure(1, weight=1)
+        self.newframe.rowconfigure(3, weight=1)
+        self.okbtn = ttk.Button(self.newframe, text="OK", width=10)
+        self.okbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
+        self.okbtn.config(command=self.submit_item)
+        self.cattext.insert(END, parent)
+        self.cancelbtn = ttk.Button(self.newframe, text="Cancel",
+            command=self.newframe.destroy)
+        self.cancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
+        self.newframe.bind("<Escape>", lambda a: self.newframe.destroy())
+        self.nametext.focus()
 
-        self._filehandler.add_item(newname, newparent, newcontext)
+        #Tried this using lists without luck.
+        self.nametext.bind("<Tab>", lambda a:self.focus_on(target=self.contenttext))
+        self.nametext.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.cattext))
+
+        self.cattext.bind("<Tab>", lambda a:self.focus_on(target=self.nametext))
+        self.cattext.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.cancelbtn))
+
+        self.contenttext.bind("<Tab>", lambda a:self.focus_on(target=self.okbtn))
+        self.contenttext.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.nametext))
+
+        self.okbtn.bind("<Tab>", lambda a:self.focus_on(target=self.cancelbtn))
+        self.okbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.contenttext))
+
+        self.cancelbtn.bind("<Tab>", lambda a:self.focus_on(target=self.cattext))
+        self.cancelbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.okbtn))
+
+
+    def focus_next(self, event=""):
+        event.tk_focusNext().focus()
+        return("break")
+
+    def focus_prev(self, event):
+        event.tk_focusPrev().focus()
+        return("break")
+    def focus_on(self, target=""):
+        target.focus()
+        return("break")
+
+
+    def submit_item(self, button=""):
+        name = self.nametext.get("1.0", END).strip()
+        parent = self.cattext.get("1.0", END).strip()
+        content = self.contenttext.get("1.0", END).replace("\n\r", "\n").strip()
+        self._filehandler.add_item(name, parent, content)
+        print(len(self._filehandler.itemlist))
+        self.updateTree()
+        self.newframe.destroy()
+
+
+
 
 
 
@@ -145,14 +188,19 @@ class UIfunctions():
         self.e1.delete("1.0", END)
         self.e1.insert(END, itemlist[index]["content"])
         self.parentname = parentname
+        if len(self.parentname) > 0:
+            self.vbs[0].config(text=f"new ({self.parentname})")
+        else:
+            self.vbs[0].config(text=f"new")
+        self.vbs[1].config(text=f"newsub ({self.previeweditem})")
 
-    def edititem(self, button):
+    def edititem(self, button=""):
         """
         copies text from e1 to e2
         """
         itemlist = self._filehandler.itemlist
         self.e2.delete("1.0", END)
-        self.e2.insert(END, self.e1.get("1.0", END))
+        self.e2.insert(END, self.e1.get("1.0", END)[:-1])
 
         self.editeditem = self.previeweditem
         name = self.editeditem
@@ -179,7 +227,7 @@ class UIfunctions():
         object.heading(col, command=lambda: \
                    self.treeview_sort_column(tv, col, not reverse))
 
-    def saveitem(self, button):
+    def saveitem(self, button=""):
         """
         saves text from gui back into main dictionary
         and redraws tree, and selects where we were.
@@ -187,7 +235,7 @@ class UIfunctions():
         2) update "edit field"
         """
 
-        newcontent = self.e2.get("1.0", END)
+        newcontent = self.e2.get("1.0", END)[:-1]
         for i, k in enumerate(self.itemlist):    # update Dictionary
             if k["name"] == self.editeditem:
                 self._filehandler.itemlist[i]["content"] = newcontent
@@ -211,7 +259,6 @@ class UIfunctions():
                 win = self.root
 
             a = win.winfo_geometry().split('+')[0]
-            print(a)
             b = a.split('x')
             w = int(b[0])
             h = int(b[1])
@@ -220,26 +267,32 @@ class UIfunctions():
     def updateTree(self):
         self.itemlist = self._filehandler.itemlist  # gets from FileHandler
         itemlist = self.itemlist[:]   # temp list that we can delete from
-
         uniquenames = set()
+        print(len(itemlist))
+        #for i in itemlist:
+        #    uniquenames.add(i["name"])
+        #    print(i["name"])
+
+        self.l1.delete(*self.l1.get_children())
         while len(itemlist) > 0:
             for i, item in enumerate(itemlist):
-                parent = item["parent"]
-                if parent == "":
-                    try:
-                        self.l1.insert(
-                            '', 'end', item["name"], text=item["name"])
-                    except TclError:
-                        self._filehandler.setstaus(f'Error: Tried to add item\
-                         {item["name"]}, but it was already in the list')
+                if item["name"] not in uniquenames:
+                    if item["parent"] == "":
+                        try:
+                            self.l1.insert(
+                                '', 'end', item["name"], text=item["name"])
+                        except TclError:
+                            self._filehandler.setstatus(f'Error: Tried to add item\
+                             {item["name"]}, but it was already in the list')
+                        del itemlist[i]
+                        uniquenames.add(item["name"])
+                    elif item["parent"] in uniquenames:  # it exists, so lets add to it.
+                        self.l1.insert(item["parent"], 'end',
+                                       item["name"], text=item["name"])
+                        del itemlist[i]
+                        uniquenames.add(item["name"])
+                else:
                     del itemlist[i]
-                    uniquenames.add(item["name"])
-                elif parent in uniquenames:  # it exists, so lets add to it.
-                    self.l1.insert(item["parent"], 'end',
-                                   item["name"], text=item["name"])
-                    del itemlist[i]
-                    uniquenames.add(item["name"])
-        print(self)
 
     def close_file(self):
         self.e1.delete("1.0", END)
