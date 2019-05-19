@@ -188,17 +188,14 @@ class UIfunctions():
         self._filehandler.rename_item(oldname = oldname, newname = newname)
         self.updateTree(selection=newname)
 
-    def validate_input(self, text="", btn=None):
-        print("np")
-        if P in self._filehandler.get_names():
-            rnokbtn.config(state=NORMAL)
-            print(f"yes {rnname.get()} is in getnames")
-            print(self._filehandler.get_names())
-        else:
-            rnokbtn.config(state=DISABLED)
-        return True
+
 
     def change_parent(self, Event=None):
+        def validate_input(input="", btn=None):
+            if input in self._filehandler.get_names():
+                rnokbtn.config(state=NORMAL)
+            else:
+                rnokbtn.config(state=DISABLED)
 
         self.rnvar = StringVar()
         self.rnvar.trace('w', lambda a,b,c:print("test"))
@@ -244,6 +241,8 @@ class UIfunctions():
         rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
         rnframe.bind("<Escape>", lambda a: rnframe.destroy())
         rnname.focus()
+        rnname.bind("<KeyRelease>", lambda a: validate_input(
+            input = rnname.get(), btn=rnokbtn))
 
         rnname.bind("<Tab>", lambda a:self.focus_on(target=rnokbtn))
         rnname.bind("<Shift-Tab>", lambda a:self.focus_on(target=rncancelbtn))
@@ -494,15 +493,13 @@ class UIfunctions():
         if parent != None and parent != "":
             self.l1.item(parent, open=True)
 
-        """ts = selection
-        x = True
-        while x == True:
+        ts = selection
+        while self._filehandler.get_parent(ts):
             ap = self._filehandler.get_parent(ts)
             if ap != False:
                 self.l1.item(ap, open=True)
                 ts = ap
-            else:
-                x = False"""
+
         self.l1.selection_clear()
         self.l1.selection_set(selection)
         self.l1.focus(selection)

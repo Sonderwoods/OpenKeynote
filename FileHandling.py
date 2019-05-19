@@ -138,7 +138,7 @@ class FileHandler():
     def change_parent(self, event=None, item="", newparent=""):
         for i, entry in enumerate(self.itemlist):
             if entry["name"].strip() == str(item).strip():
-                print(f"changed parent of {item} to {newparent}")
+                self.setstatus(f"changed parent of {item} to {newparent}")
                 self.itemlist[i]["parent"] = newparent
                 return True
         return False
