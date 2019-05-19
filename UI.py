@@ -77,7 +77,7 @@ class UserInterface(UIfunctions):
         ##################
         self.vbs = []
         middlebuttons = ("New Item", "New Subitem", "Delete",
-                         "Rename", "Change Parent*")
+                         "Rename", "Change Parent")
         middlefunctions = (
             lambda: self.add_item(parent=self.parentname),
             lambda: self.add_item(parent=self.previeweditem),
@@ -86,7 +86,8 @@ class UserInterface(UIfunctions):
             self.vbs.append(ttk.Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)
             self.vbs[a].config(command=middlefunctions[a], width=20)
-        self.vbs[4].config(state=DISABLED)
+        for x in [2,3,4]:
+            self.vbs[x].config(state=DISABLED)
         self.tx1 = Label(self.frame_right, text="Preview", anchor=W)
         self.tx1.grid(row=0, column=0, columnspan=3, sticky=W+E)
         self.tx2 = Label(self.frame_right, text="Editing", anchor=W)

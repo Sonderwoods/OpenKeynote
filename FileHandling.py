@@ -3,6 +3,7 @@ from datetime import datetime
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+from pathlib import Path
 import io
 import os
 # OpenKeynote
@@ -115,8 +116,33 @@ class FileHandler():
         for i, entry in enumerate(self.itemlist):
             if item == entry["name"]:
                 self.itemlist.remove(entry)
-    def rename_item(self, item=None):
-        pass
+
+    def get_names(self, event=None):
+        return [x['name'] for x in self.itemlist if len(x['name']) > 0]
+
+    def get_parent(self, item=None):
+        for i in self.itemlist:
+            if i["name"] == item:
+                return i["parent"]
+        return False
+
+    def rename_item(self, oldname=None, newname=None):
+        for i, item in enumerate(self.itemlist):
+            if item["name"] == oldname:
+                self.itemlist[i]["name"] = newname
+            if item["parent"] == oldname:
+                self.itemlist[i]["parent"] = newname
+        self.setstatus(f"Renamed {oldname} to {newname}, including all children.")
+        print(f"renaming {oldname} to {newname}")
+
+    def change_parent(self, event=None, item="", newparent=""):
+        for i, entry in enumerate(self.itemlist):
+            if entry["name"].strip() == str(item).strip():
+                print(f"changed parent of {item} to {newparent}")
+                self.itemlist[i]["parent"] = newparent
+                return True
+        return False
+
 
     def write_file(self, path = ""):
         """

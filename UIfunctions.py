@@ -143,49 +143,139 @@ class UIfunctions():
 
 
     def rename_item(self, event=None):
-        label = "XX"
-        self._filehandler.setstatus("TODO: Rename item")
+        item = self.previeweditem
         x = self.root.winfo_pointerx()
         y = self.root.winfo_pointery()
         absx = self.root.winfo_pointerx() - self.root.winfo_rootx()
         absy = self.root.winfo_pointery() - self.root.winfo_rooty()
-        self.rnframe = Tk()
-        self.rnframe.title(f"OpenKeyote - Renaming {label}")
-        self.rnframe.geometry(f"400x100+{x+50}+{y-20}")
-        namelabel = Label(self.rnframe, text=f"Renaming : {label}")
+        rnframe = Tk()
+        rnframe.title(f"OpenKeyote - Renaming {item}")
+        rnframe.geometry(f"400x100+{x+50}+{y-20}")
+        namelabel = Label(rnframe, text=f"Renaming {item} to:")
         namelabel.grid(row=2, column=0, padx=10, pady=10)
-        self.rnname = Entry(self.rnframe, font=("Courier", 13),
+        rnname = Entry(rnframe, font=("Courier", 13),
                        highlightthickness=1,
                        borderwidth=1, relief="solid")
-        self.rnname.grid(row=2, column=1, sticky=E+W, padx=10, pady=10)
+        rnname.grid(row=2, column=1, sticky=E+W, padx=10, pady=10)
 
-        self.rnframe.columnconfigure(1, weight=1)
-        self.rnframe.rowconfigure(1, weight=1)
-        self.rnokbtn = ttk.Button(self.rnframe, text="OK", width=10)
-        self.rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
-        self.rnokbtn.config(command=self.submit_remame)
-        self.rncancelbtn = ttk.Button(self.rnframe, text="Cancel",
-            command=self.rnframe.destroy)
-        self.rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
-        self.rnframe.bind("<Escape>", lambda a: self.rnframe.destroy())
-        self.rnname.focus()
+        rnframe.columnconfigure(1, weight=1)
+        rnframe.rowconfigure(1, weight=1)
+        rnokbtn = ttk.Button(rnframe, text="OK", width=10)
+        rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
+        rnokbtn.config(command=lambda:self.submit_rename(
+            frame=rnframe,
+            oldname=item,
+            newname=rnname.get()
+            ))
+        rncancelbtn = ttk.Button(rnframe, text="Cancel",
+            command=rnframe.destroy)
+        rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
+        rnframe.bind("<Escape>", lambda a: rnframe.destroy())
+        rnname.focus()
 
         #Tried this using lists without luck.
-        self.rnname.bind("<Tab>", lambda a:self.focus_on(target=self.self.rnokbtn))
-        self.rnname.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.rncancelbtn))
+        rnname.bind("<Tab>", lambda a:self.focus_on(target=rnokbtn))
+        rnname.bind("<Shift-Tab>", lambda a:self.focus_on(target=rncancelbtn))
 
-        self.rnokbtn.bind("<Tab>", lambda a:self.focus_on(target=self.rncancelbtn))
-        self.rnokbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.rnname))
+        rnokbtn.bind("<Tab>", lambda a:self.focus_on(target=rncancelbtn))
+        rnokbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=rnname))
 
-        self.rncancelbtn.bind("<Tab>", lambda a:self.focus_on(target=self.rnname))
-        self.rncancelbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.rnokbtn))
+        rncancelbtn.bind("<Tab>", lambda a:self.focus_on(target=rnname))
+        rncancelbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=rnokbtn))
 
-    def submit_rename(self, event=None):
-        pass
+    def submit_rename(self, event=None, frame=None, oldname="", newname=""):
+        frame.destroy()
+        self._filehandler.rename_item(oldname = oldname, newname = newname)
+        self.updateTree(selection=newname)
+
+    def validate_input(self, text="", btn=None):
+        print("np")
+        if P in self._filehandler.get_names():
+            rnokbtn.config(state=NORMAL)
+            print(f"yes {rnname.get()} is in getnames")
+            print(self._filehandler.get_names())
+        else:
+            rnokbtn.config(state=DISABLED)
+        return True
+
+    def change_parent(self, Event=None):
+
+        self.rnvar = StringVar()
+        self.rnvar.trace('w', lambda a,b,c:print("test"))
+        self.rnvar.set("awd")
+        items = self.l1.selection()
+        if len(items) > 1:
+            item = "multiple items"
+        else:
+            item = items[0]
+        #print(items)
+        oldparent = self.parentname
+        x = self.root.winfo_pointerx()
+        y = self.root.winfo_pointery()
+        absx = self.root.winfo_pointerx() - self.root.winfo_rootx()
+        absy = self.root.winfo_pointery() - self.root.winfo_rooty()
+        rnframe = Tk()
+        rnframe.title(f"OpenKeyote - Change parent for: {item}")
+        rnframe.geometry(f"400x100+{x+50}+{y-20}")
+        namelabel = Label(rnframe, text=f"Change parent from {oldparent} to:")
+        namelabel.grid(row=2, column=0, padx=10, pady=10)
+        rnname = Entry(rnframe, font=("Courier", 13),
+                       highlightthickness=1,
+                       borderwidth=1, relief="solid",
+                       textvariable = self.rnvar)
+        rnname.grid(row=2, column=1, sticky=E+W, padx=10, pady=10)
+
+        rnframe.columnconfigure(1, weight=1)
+        rnframe.rowconfigure(1, weight=1)
+        rnokbtn = ttk.Button(rnframe, text="OK", width=10)
+        if len(items) > 1:
+            item = "multiple items"
+            rnokbtn.config(text=f"OK (editing {len(items)} items)", width=20)
+        else:
+            item = self.previeweditem
+        rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
+        rnokbtn.config(command=lambda:self.submit_change_parent(
+            frame=rnframe,
+            items=items,
+            newparent=rnname.get()
+            ))
+        rncancelbtn = ttk.Button(rnframe, text="Cancel",
+            command=rnframe.destroy)
+        rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
+        rnframe.bind("<Escape>", lambda a: rnframe.destroy())
+        rnname.focus()
+
+        rnname.bind("<Tab>", lambda a:self.focus_on(target=rnokbtn))
+        rnname.bind("<Shift-Tab>", lambda a:self.focus_on(target=rncancelbtn))
+        rnname.bind("<Return>", lambda a:self.submit_change_parent(
+            frame=rnframe,
+            items=items,
+            newparent=rnname.get()
+            ))
+
+        rnokbtn.bind("<Tab>", lambda a:self.focus_on(target=rncancelbtn))
+        rnokbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=rnname))
+
+        rncancelbtn.bind("<Tab>", lambda a:self.focus_on(target=rnname))
+        rncancelbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=rnokbtn))
 
 
-    def change_parent(self, button=""):
-        self._filehandler.setstatus("TODO: Change parent")
+
+    def submit_change_parent(self, event=None, frame=None, items=[], newparent=""):
+        if newparent == "":
+            for item in items:
+                self._filehandler.change_parent(
+                    item = item, newparent = newparent)
+        else:
+            if newparent not in self._filehandler.get_names(): return
+        for item in items:
+            if item != newparent:
+                self._filehandler.change_parent(
+                    item = item, newparent = newparent)
+            #print(f"trying to change parent of {item} to {newparent}")
+        self.updateTree(selection=items[0])
+        frame.destroy()
+
 
     def save_file(self, button="", path=""):
         if path != "":
@@ -223,16 +313,34 @@ class UIfunctions():
         self.e1.delete("1.0", END)
         self.e1.insert(END, itemlist[index]["content"])
         self.parentname = parentname
+        ls = self.l1.selection()
+        self.vbs[2].config(state=NORMAL)
+        self.vbs[3].config(state=NORMAL)
+        self.vbs[4].config(state=NORMAL)
+        self.vbs[2].config(text=f"Delete {self.previeweditem}")
+        if len(ls) < 1:
+            self.vbs[2].config(state=DISABLED)
+            self.vbs[3].config(state=DISABLED)
+            self.vbs[4].config(state=DISABLED)
+        if len(ls) > 1:
+            self.vbs[3].config(state=DISABLED)
+            for i in ls:
+                if self._filehandler.get_parent(item=i) != self._filehandler.get_parent(item=ls[0]):
+                    self.vbs[4].config(state=DISABLED)
+            self.vbs[4].config(text=f"Change Parents")
+        else:
+            self.vbs[4].config(text=f"Change Parent")
         if len(self.parentname) > 0:
             self.vbs[0].config(text=f"New Item ({self.parentname})")
             self.vbs[1].config(state=DISABLED)
         else:
             self.vbs[0].config(text=f"New Item")
-        if len(self.get_all_children(self.l1, self.previeweditem)) > 0:
-            self.vbs[2].config(text=f"Delete {self.previeweditem} and subs")
-        else:
-            self.vbs[2].config(text=f"Delete {self.previeweditem}")
-        if len(self.previeweditem) > 0:
+        cs = self.get_all_children(self.l1, self.previeweditem)
+        if len(cs) > 0 and len(self.previeweditem) > 0:
+            self.vbs[2].config(text=f"Delete {self.previeweditem} and {len(cs)} children")
+        if len(ls) > 1:
+            self.vbs[2].config(text=f"Delete {len(ls)} items")
+        if len(self.previeweditem) > 0 and len(ls) == 1:
             self.vbs[1].config(state=NORMAL)
             self.vbs[1].config(text=f"New Subitem ({self.previeweditem})")
         else:
@@ -341,7 +449,6 @@ class UIfunctions():
         self.itemlist = self._filehandler.itemlist  # gets from FileHandler
         itemlist = self.itemlist[:]   # temp list that we can delete from
         uniquenames = set()
-        print(len(itemlist))
         on_off_dict = {}
         previous_tree = self.get_all_children(self.l1)
         for item in previous_tree:
@@ -386,6 +493,16 @@ class UIfunctions():
                     del itemlist[i]
         if parent != None and parent != "":
             self.l1.item(parent, open=True)
+
+        """ts = selection
+        x = True
+        while x == True:
+            ap = self._filehandler.get_parent(ts)
+            if ap != False:
+                self.l1.item(ap, open=True)
+                ts = ap
+            else:
+                x = False"""
         self.l1.selection_clear()
         self.l1.selection_set(selection)
         self.l1.focus(selection)
