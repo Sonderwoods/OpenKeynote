@@ -35,7 +35,7 @@ class FileHandler():
         if self._prebackup == True:
             try:
                 self.status= f"Trying to backup to {self._bkfolder}"
-                self.createbackup(self._folder, self._filename, self._bkfolder)
+                self.create_backup(self._folder, self._filename, self._bkfolder)
             except AttributeError:
                 pass
 
@@ -64,85 +64,8 @@ class FileHandler():
                     {"name": name, "content": content, "parent": parent})
             templist = sorted(templist, key=lambda i: i['name'] in templist)
         self.itemlist = templist
-        self.setstatus(message="Successfully read file")
+        self.set_status(message="Successfully read file")
         return True
-
-    def clear_memory(self):
-        """
-        Closes current file
-        """
-        # TODO: Ask to save current file.
-        self.path = ""
-        self.itemlist = []
-
-
-    def createbackup(self, folder, filename, bkfolder):
-        """
-        Backups your file into a backupfolder
-        """
-        mytime = datetime.now().strftime("%Y%m%d_%H%M%S")
-        try:
-            os.mkdir(bkfolder)
-        except OSError:
-            pass  # folder already exists
-        try:
-            filefirstname = ".".join(filename.split(".")[:-1])
-            targetfile = bkfolder + "/" + filefirstname + "_" + mytime + ".txt"
-            copyfile(folder + "/" + filename, targetfile)
-        except FileNotFoundError as e:
-            print(f"Error: Can't create backup!! ( {e} )")
-
-    def add_item(self, name, parent, content):
-        print(f"adding {name}, {parent}, {content}")
-        self.itemlist.append(
-            {"name": name, "content": content, "parent": parent})
-        self.setstatus(message=f"succesfully added: {name.strip()}")
-
-
-    def getstatus(self):
-        if self.statustimer < 20:
-            self.statustimer += 1
-        else:
-            self.statustimer = 0
-            self.statustext = self.status_standard
-        return self.statustext
-
-    def setstatus(self, message=""):
-        print(message)
-        self.statustext = message
-        self.statustimer = 0
-
-    def delete_item(self, item=None):
-        for i, entry in enumerate(self.itemlist):
-            if item == entry["name"]:
-                self.itemlist.remove(entry)
-
-    def get_names(self, event=None):
-        return [x['name'] for x in self.itemlist if len(x['name']) > 0]
-
-    def get_parent(self, item=None):
-        for i in self.itemlist:
-            if i["name"] == item:
-                return i["parent"]
-        return False
-
-    def rename_item(self, oldname=None, newname=None):
-        for i, item in enumerate(self.itemlist):
-            if item["name"] == oldname:
-                self.itemlist[i]["name"] = newname
-            if item["parent"] == oldname:
-                self.itemlist[i]["parent"] = newname
-        self.setstatus(f"Renamed {oldname} to {newname}, including all children.")
-        print(f"renaming {oldname} to {newname}")
-
-    def change_parent(self, event=None, item="", newparent=""):
-        for i, entry in enumerate(self.itemlist):
-            if entry["name"].strip() == str(item).strip():
-                self.setstatus(f"changed parent of {item} to {newparent}")
-                self.itemlist[i]["parent"] = newparent
-                return True
-        return False
-
 
     def write_file(self, path = ""):
         """
@@ -164,6 +87,80 @@ class FileHandler():
             print(f"Successfully saved to {path}")
         except:
             print("Error trying to save the file")
+
+    def clear_memory(self):
+        """
+        Closes current file
+        """
+        # TODO: Ask to save current file.
+        self.path = ""
+        self.itemlist = []
+
+    def create_backup(self, folder, filename, bkfolder):
+        """
+        Backups your file into a backupfolder
+        """
+        mytime = datetime.now().strftime("%Y%m%d_%H%M%S")
+        try:
+            os.mkdir(bkfolder)
+        except OSError:
+            pass  # folder already exists
+        try:
+            filefirstname = ".".join(filename.split(".")[:-1])
+            targetfile = bkfolder + "/" + filefirstname + "_" + mytime + ".txt"
+            copyfile(folder + "/" + filename, targetfile)
+        except FileNotFoundError as e:
+            print(f"Error: Can't create backup!! ( {e} )")
+
+    def add_item(self, name, parent, content):
+        print(f"adding {name}, {parent}, {content}")
+        self.itemlist.append(
+            {"name": name, "content": content, "parent": parent})
+        self.set_status(message=f"succesfully added: {name.strip()}")
+
+    def delete_item(self, item=None):
+        for i, entry in enumerate(self.itemlist):
+            if item == entry["name"]:
+                self.itemlist.remove(entry)
+
+    def set_status(self, message=""):
+        print(message)
+        self.statustext = message
+        self.statustimer = 0
+
+    def refresh_status(self):
+        if self.statustimer < 20:
+            self.statustimer += 1
+        else:
+            self.statustimer = 0
+            self.statustext = self.status_standard
+        return self.statustext
+
+    def get_names(self, event=None):
+        return [x['name'] for x in self.itemlist if len(x['name']) > 0]
+
+    def rename_item(self, oldname=None, newname=None):
+        for i, item in enumerate(self.itemlist):
+            if item["name"] == oldname:
+                self.itemlist[i]["name"] = newname
+            if item["parent"] == oldname:
+                self.itemlist[i]["parent"] = newname
+        self.set_status(f"Renamed {oldname} to {newname}, including all children.")
+        print(f"renaming {oldname} to {newname}")
+
+    def get_parent(self, item=None):
+        for i in self.itemlist:
+            if i["name"] == item:
+                return i["parent"]
+        return False
+
+    def change_parent(self, event=None, item="", newparent=""):
+        for i, entry in enumerate(self.itemlist):
+            if entry["name"].strip() == str(item).strip():
+                self.set_status(f"changed parent of {item} to {newparent}")
+                self.itemlist[i]["parent"] = newparent
+                return True
+        return False
 
 if __name__ == '__main__':
     from main import main
