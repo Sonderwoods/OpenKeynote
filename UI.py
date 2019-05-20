@@ -6,7 +6,7 @@ from UIfunctions import UIfunctions
 
 class UserInterface(UIfunctions):
     def __init__(self, filehandler, path=None):
-
+        self.title = "OpenKeynote (BETA)"
         self._filehandler = filehandler
         self.path = path
         self.itemlist = []
@@ -203,9 +203,10 @@ class UserInterface(UIfunctions):
         self.root.bind(f"<{self.CTRL}-s>", self.save_file)
         self.root.bind(f"<{self.CTRL}-o>", self.open_file_dialog)
 
+        self.root.title(self.title)
         if self.path:
             self.open_file(path=self.path)
-        self.root.title("OpenKeynote (BETA)")
+
 
         """ TODO: ICON /Windows
 

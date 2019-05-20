@@ -39,6 +39,7 @@ class UIfunctions():
         self.e1.delete("1.0", END)
         self.e2.delete("1.0", END)
         self.update_tree()
+        self.root.title(self.title + " - " + str(path))
 
     def save_file_dialog(self, button=""):
         path = filedialog.asksaveasfilename(
