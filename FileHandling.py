@@ -34,14 +34,15 @@ class FileHandler():
 
         if self._prebackup == True:
             try:
-                self.status= f"Trying to backup to {self._bkfolder}"
-                self.create_backup(self._folder, self._filename, self._bkfolder)
+                self.status = f"Trying to backup to {self._bkfolder}"
+                self.create_backup(
+                    self._folder, self._filename, self._bkfolder)
             except AttributeError:
                 pass
 
-        #self.open_file()
+        # self.open_file()
 
-    def read_file(self, path = ""):
+    def read_file(self, path=""):
         templist = []
         with open(path, "r", encoding="utf-16", newline="") as f:
             chars = f.read().split("\r")
@@ -67,7 +68,7 @@ class FileHandler():
         self.set_status(message="Successfully read file")
         return True
 
-    def write_file(self, path = ""):
+    def write_file(self, path=""):
         """
         Saves file! WIP
         """
@@ -145,7 +146,8 @@ class FileHandler():
                 self.itemlist[i]["name"] = newname
             if item["parent"] == oldname:
                 self.itemlist[i]["parent"] = newname
-        self.set_status(f"Renamed {oldname} to {newname}, including all children.")
+        self.set_status(
+            f"Renamed {oldname} to {newname}, including all children.")
         print(f"renaming {oldname} to {newname}")
 
     def get_parent(self, item=None):
@@ -161,6 +163,7 @@ class FileHandler():
                 self.itemlist[i]["parent"] = newparent
                 return True
         return False
+
 
 if __name__ == '__main__':
     from main import main
