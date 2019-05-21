@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
 from shutil import copyfile
 from datetime import datetime
 from tkinter import *
@@ -130,7 +133,7 @@ class FileHandler():
         self.statustimer = 0
 
     def refresh_status(self):
-        if self.statustimer < 20:
+        if self.statustimer < 25:
             self.statustimer += 1
         else:
             self.statustimer = 0

@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
 import os
 from tkinter import *
 from tkinter import ttk
@@ -18,11 +21,11 @@ class UserInterface(UIfunctions):
         self.main_window()
         self.tree_view()
         self.frame_vertical_bar()
-        self.frame_bindings()
-        self.main_menu()
+        self.bindings_and_menu()
         self.frame_setup()
 
-        self.root.after(100, self.status)
+        self.update_status()
+        self.root.mainloop()
 
     def main_window(self, *args):
         self.mainframe = Frame(self.root)
@@ -81,7 +84,8 @@ class UserInterface(UIfunctions):
         middlefunctions = (
             lambda: self.add_item(parent=self.parentname),
             lambda: self.add_item(parent=self.previeweditem),
-            self.delete_item, self.rename_item_dialog, self.change_parent_dialog)
+            lambda: self.delete_item_dialog(),
+            self.rename_item_dialog, self.change_parent_dialog)
         for a, button_text in enumerate(middlebuttons):
             self.vbs.append(ttk.Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)
@@ -93,6 +97,7 @@ class UserInterface(UIfunctions):
         self.tx2 = Label(self.frame_right, text="Editing", anchor=W)
         self.tx2.grid(row=2, column=0, sticky=W+E)
 
+
         self.e1 = Text(self.frame_right, fg="#555", font=("Courier", 13),
                        padx=10, pady=10, highlightthickness=0,
                        borderwidth=1, relief="solid")
@@ -103,7 +108,7 @@ class UserInterface(UIfunctions):
                        relief="solid", padx=10, pady=10, highlightthickness=0)
         self.e2.grid(row=3, column=0, columnspan=3, sticky=E+W+S+N)
 
-    def frame_bindings(self, *args):
+    def bindings_and_menu(self, *args):
         """
         Main key bindings
         """
@@ -113,8 +118,12 @@ class UserInterface(UIfunctions):
             self.CTRL = "Command"
 
         def bindings_key(event):
-            # if len(str(event.keysym)) == 1:
-            return("break")
+            print(event.state)
+            if(event.keysym=='c' and (event.state==8 or event.state==12)):
+                return
+            else:
+                return("break")
+
         self.e1.bind("<Key>", bindings_key)
         self.e1.bind("<Tab>", lambda a: self.focus_on(target=self.e2))
         self.e1.bind(
@@ -134,14 +143,9 @@ class UserInterface(UIfunctions):
         self.frame_right.rowconfigure(3, weight=1)
         self.frame_right.columnconfigure(0, weight=1)
 
-    def main_menu(self, *args):
-        """
-        Main top bar menu and right click menu
-        """
-
-        menu = Menu(self.root)
-        self.root.config(menu=menu)
-        file = Menu(menu)
+        self.menu = Menu(self.root)
+        self.root.config(menu=self.menu)
+        file = Menu(self.menu)
         file.add_command(label='New File*',
                          accelerator=f"{self.CTRL}-n", command=self.new_file)
         file.add_command(
@@ -153,34 +157,44 @@ class UserInterface(UIfunctions):
         file.add_command(label='Close file', command=self.close_file)
         file.add_command(
             label='Exit', accelerator=f"{self.CTRL}-q", command=self.client_exit)
-        menu.add_cascade(label='File', menu=file)
+        self.menu.add_cascade(label='File', menu=file)
 
         self.clickmenu = Menu(self.root, tearoff=0)
         self.clickmenu.add_command(label="Cut")
         self.clickmenu.add_command(label="Copy")
         self.clickmenu.add_command(label="Paste")
         self.root.bind_class(
-            "Text", "<Button-2><ButtonRelease-2>", self.right_click_menu)
+            "Text", "<Button-2><ButtonRelease-2>", lambda event=None:self.right_click_menu())
 
-        menu_edit = Menu(menu)
+        menu_edit = Menu(self.menu)
         menu_edit.add_command(label='Select All', accelerator=f"{self.CTRL}-a",
                               command=self.select_all)
         self.root.bind(f"<{self.CTRL}-a>", self.select_all)
         self.e1.bind(f"<{self.CTRL}-a>", self.select_all)
 
-        self.e1.bind(f"<{self.CTRL}-c>", self.root.event_generate("<<Copy>>"))
+        self.e1.bind(f"<{self.CTRL}-c>", self.e1.event_generate("<<Copy>>"))
         self.e2.bind(f"<{self.CTRL}-a>", self.select_all)
         menu_edit.add_command(label='Cut', accelerator=f"{self.CTRL}-x",
                               command=lambda: self.root.event_generate("<<Cut>>"))
         menu_edit.add_command(label='Copy', accelerator=f"{self.CTRL}-c",
-                              command=lambda: self.root.event_generate("<<Copy>>"))
+                              command=lambda: self.copy_text())
         menu_edit.add_command(label='Paste', accelerator=f"{self.CTRL}-v",
                               command=lambda: self.root.event_generate("<<Paste>>"))
-        menu.add_cascade(label='Edit', menu=menu_edit)
+        self.menu.add_cascade(label='Edit', menu=menu_edit)
 
-        menu_help = Menu(menu)
+        menu_help = Menu(self.menu)
         menu_help.add_command(label='About', command=self.about)
-        menu.add_cascade(label='Help', menu=menu_help)
+        self.menu.add_cascade(label='Help', menu=menu_help)
+
+        for i in "Up,Down,Enter,Left".split(","):
+            self.root.bind("<"+i+">", self.change_selection)
+
+        self.root.bind(f"<{self.CTRL}-s>", self.save_file)
+        self.root.bind(f"<{self.CTRL}-o>", self.open_file_dialog)
+
+    def copy_text(self, event=None):
+        w = self.root.focus_get()
+        w.event_generate("<<Copy>>")
 
     def frame_setup(self, *args):
         """
@@ -196,11 +210,6 @@ class UserInterface(UIfunctions):
             except Exception:
                 pass  # this will fail on Windows Server and maybe early Windows
 
-        for i in "Up,Down,Enter,Left".split(","):
-            self.root.bind("<"+i+">", self.change_selection)
-
-        self.root.bind(f"<{self.CTRL}-s>", self.save_file)
-        self.root.bind(f"<{self.CTRL}-o>", self.open_file_dialog)
 
         self.root.title(self.title)
         if self.path:
@@ -226,26 +235,27 @@ class UserInterface(UIfunctions):
         self.root.geometry(f"{self.width}x{self.height}+{self.x}+{self.y}")
         self.root.update()
         self.root.after(0, self.fixUI)
-        self.root.mainloop()
+
 
     def right_click_menu(self, event=None):
+        x,y = self.root.winfo_pointerxy()
+        w = self.root.winfo_containing(x,y)
         # https://stackoverflow.com/a/8476726/11514850
-        w = e.widget
+        #w = self.root
         self.clickmenu.entryconfigure("Cut",
                                       command=lambda: w.event_generate("<<Cut>>"))
         self.clickmenu.entryconfigure("Copy",
                                       command=lambda: w.event_generate("<<Copy>>"))
         self.clickmenu.entryconfigure("Paste",
                                       command=lambda: w.event_generate("<<Paste>>"))
-        self.clickmenu.tk.call("tk_popup", self.clickmenu, e.x_root, e.y_root)
+        self.clickmenu.tk.call("tk_popup", self.clickmenu, w.winfo_pointerx(), w.winfo_pointery())
 
-    def status(self, dummy=None):
+    def update_status(self, event=None):
         """
         Set statusbar in bottom of the window
         """
-        text = self._filehandler.getstatus()
-        self.statusbar.config(text=text)
-        self.root.after(100, self.status)
+        self.statusbar.config(text=self._filehandler.refresh_status())
+        self.root.after(100, self.update_status)
 
     def client_exit(self):
         exit()

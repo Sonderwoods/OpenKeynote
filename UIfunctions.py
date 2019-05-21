@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
 import os
 from tkinter import *
 from tkinter import ttk
@@ -18,7 +21,7 @@ class UIfunctions():
                 \tparent: {i['parent']}")
         return "\n".join(text)
 
-    def open_file_dialog(self, button=""):
+    def open_file_dialog(self, event=None):
         path = filedialog.askopenfilename(
             initialdir=self._filehandler._folder,
             title="Open File",
@@ -41,7 +44,7 @@ class UIfunctions():
         self.update_tree()
         self.root.title(self.title + " - " + str(path))
 
-    def save_file_dialog(self, button=""):
+    def save_file_dialog(self, event=None):
         path = filedialog.asksaveasfilename(
             initialdir=self._filehandler._folder,
             title="Save File",
@@ -50,7 +53,7 @@ class UIfunctions():
             self._filehandler.path = path
             self.save_file(path=path)
 
-    def save_file(self, button="", path=""):
+    def save_file(self, event=None, path=""):
         if path != "":
             self._filehandler.write_file(path)
         else:
@@ -59,7 +62,7 @@ class UIfunctions():
             else:
                 self._filehandler.set_status("tried to save unknown path")
 
-    def new_file(self, button=""):
+    def new_file(self, event=None):
         self._filehandler.set_status("Missing New file function")
 
     def close_file(self):
@@ -68,7 +71,7 @@ class UIfunctions():
         self._filehandler.clear_memory()
         self.l1.delete(*self.l1.get_children())
 
-    def add_item(self, button="", parent=""):
+    def add_item(self, event=None, parent=""):
         x = self.root.winfo_pointerx()
         y = self.root.winfo_pointery()
         absx = self.root.winfo_pointerx() - self.root.winfo_rootx()
@@ -132,7 +135,7 @@ class UIfunctions():
         self.cancelbtn.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=self.okbtn))
 
-    def submit_item(self, button=""):
+    def submit_item(self, event=None):
         name = self.nametext.get("1.0", END).strip()
         parent = self.cattext.get("1.0", END).strip()
         content = self.contenttext.get(
@@ -141,10 +144,7 @@ class UIfunctions():
         self.update_tree(selection=name, parent=parent)
         self.newframe.destroy()
 
-    def add_subitem(self, button=""):
-        self._filehandler.set_status("TODO: Add sub item")
-
-    def edit_item(self, button=""):
+    def edit_item(self, event=None):
         """
         copies text from e1 to e2
         """
@@ -163,7 +163,7 @@ class UIfunctions():
         else:
             self.tx2.config(text="Editing: {}".format(name))
 
-    def saveitem(self, button=""):
+    def saveitem(self, event=None):
         """
         saves text from gui back into main dictionary
         and redraws tree, and selects where we were.
@@ -180,14 +180,68 @@ class UIfunctions():
             #self.e1.insert(END, str(newcontent).upper())
             self.e1.insert(END, str(newcontent))
 
-    def delete_item(self, button=""):
-        mytree = self.get_all_children(self.l1, self.previeweditem)
-        for i in mytree:
-            self._filehandler.delete_item(i)
-        self._filehandler.delete_item(self.previeweditem)
-        self.update_tree()
+    def delete_item_dialog(self, event=None):
+        def delete_it(*args):
+            self.delete_items(items=items, frame=rnframe)
+
+        items = self.l1.selection()
+        if len(items) > 1:
+            item = ", ".join(items)[0:20]
+        else:
+            item = items[0]
+        #item = self.previeweditem
+        x = self.root.winfo_pointerx()
+        y = self.root.winfo_pointery()
+        absx = self.root.winfo_pointerx() - self.root.winfo_rootx()
+        absy = self.root.winfo_pointery() - self.root.winfo_rooty()
+        rnframe = Tk()
+        rnframe.title(f"Delete {item}")
+        rnframe.geometry(f"500x100+{x+50}+{y-20}")
+        namelabel = Label(rnframe, text=f"Deleting {item}. Are you sure?")
+        namelabel.grid(row=2, column=0, padx=10, pady=10)
+
+        rnframe.columnconfigure(1, weight=1)
+        rnframe.rowconfigure(1, weight=1)
+        rnokbtn = ttk.Button(rnframe, text="Yes", width=10, underline=0)
+        rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
+        rnokbtn.config(command=delete_it)
+        rncancelbtn = ttk.Button(rnframe, text="No",
+                                 command=rnframe.destroy, underline=0)
+        rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
+        rnframe.bind("<Escape>", lambda e=None: rnframe.destroy())
+        rnokbtn.focus()
+        rnframe.bind("<y>", delete_it)
+        rnframe.bind("<n>", lambda e=None:rnframe.destroy())
+        rnokbtn.bind("<Return>", delete_it)
+        rncancelbtn.bind("<Return>", lambda e=None: rnframe.destroy)
+        for i in ["Tab","Right"]:
+            rnokbtn.bind(f"<{i}>", delete_it)
+        for i in ["Shift-Tab","Left"]:
+            rncancelbtn.bind(f"<{i}>", lambda e=None: self.focus_on(target=rnokbtn))
+
+    def delete_items(self, event=None, items=[], frame=None):
+        for item in items:
+            print(f"trying to delete {item}")
+            if item in self._filehandler.get_names():
+                mytree = self.get_all_children(self.l1, item)
+                for i in mytree:
+                    self._filehandler.delete_item(i)
+                self._filehandler.delete_item(item)
+        self.update_tree(selection=self._filehandler.get_parent(item))
+        if len(items) > 1:
+            self._filehandler.set_status(f"Deleted {len(items)} items")
+        else:
+            self._filehandler.set_status(f"Deleted {item}")
+
+        if frame:
+            frame.destroy()
 
     def rename_item_dialog(self, event=None):
+        def validate_input(input="", btn=None):
+            if input in self._filehandler.get_names():
+                rnokbtn.config(state=DISABLED)
+            else:
+                rnokbtn.config(state=NORMAL)
         item = self.previeweditem
         x = self.root.winfo_pointerx()
         y = self.root.winfo_pointery()
@@ -219,6 +273,8 @@ class UIfunctions():
         rnname.focus()
 
         # Tried this using lists without luck.
+        rnname.bind("<KeyRelease>", lambda a: validate_input(
+            input=rnname.get(), btn=rnokbtn))
         rnname.bind("<Tab>", lambda a: self.focus_on(target=rnokbtn))
         rnname.bind("<Shift-Tab>", lambda a: self.focus_on(target=rncancelbtn))
 
@@ -241,9 +297,6 @@ class UIfunctions():
             else:
                 rnokbtn.config(state=DISABLED)
 
-        self.rnvar = StringVar()
-        self.rnvar.trace('w', lambda a, b, c: print("test"))
-        self.rnvar.set("awd")
         items = self.l1.selection()
         if len(items) > 1:
             item = "multiple items"
@@ -262,8 +315,7 @@ class UIfunctions():
         namelabel.grid(row=2, column=0, padx=10, pady=10)
         rnname = Entry(rnframe, font=("Courier", 13),
                        highlightthickness=1,
-                       borderwidth=1, relief="solid",
-                       textvariable=self.rnvar)
+                       borderwidth=1, relief="solid")
         # rnname = Entry(rnframe, font=("Courier", 13),
         #               highlightthickness=1,
         #               borderwidth=1, relief="solid",
@@ -383,12 +435,13 @@ class UIfunctions():
                 ts = ap
 
         self.l1.selection_clear()
-        self.l1.selection_set(selection)
-        self.l1.focus(selection)
+        if selection in self._filehandler.get_names():
+            self.l1.selection_set(selection)
+            self.l1.focus(selection)
 
         # self.l1.focus_set
 
-    def change_selection(self, button):
+    def change_selection(self, event=None):
         """
         what happens when changing selection in the treeview..
         """
@@ -453,19 +506,19 @@ class UIfunctions():
     def select_all(self, event=None):
         self.root.focus_get().tag_add('sel', '1.0', 'end-1c')
 
-    def focus_next(self, event=""):
+    def focus_next(self, event=None):
         event.tk_focusNext().focus()
         return("break")
 
-    def focus_prev(self, event):
+    def focus_prev(self, event=None):
         event.tk_focusPrev().focus()
         return("break")
 
-    def focus_on(self, target=""):
+    def focus_on(self, event=None, target=""):
         target.focus()
         return("break")
 
-    def about(self):
+    def about(self, event=None):
         newframe = Tk()
         newlabel = Label(newframe, text="OpenKeynote by Mathias Sønderskov "
                          "Nielsen.\nFor more info check out www.github.com/sonderwoods")
@@ -478,6 +531,7 @@ class UIfunctions():
         x = (newframe.winfo_screenwidth() // 2) - (width // 2)
         y = (newframe.winfo_screenheight() // 2) - (height // 2)
         newframe.geometry(f"{width}x{height}+{x}+{y}")
+        newframe.bind("<Escape>", lambda e=None: newframe.destroy())
 
     # def copy_text(self, event=None):
     #     print("x")
@@ -500,7 +554,7 @@ class UIfunctions():
         object.heading(col, command=lambda:
                        self.treeview_sort_column(tv, col, not reverse))
 
-    def fixUI(self, win=None):
+    def fixUI(self, event=None, win=None):
         """
         Resizes with 1 pixel to avoid mainUI bugs in mojave
         """
