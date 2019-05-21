@@ -4,6 +4,7 @@ from tkinter import ttk
 from tkinter import filedialog
 from UIfunctions import UIfunctions
 
+
 class UserInterface(UIfunctions):
     def __init__(self, filehandler, path=None):
         self.title = "OpenKeynote (BETA)"
@@ -23,13 +24,13 @@ class UserInterface(UIfunctions):
 
         self.root.after(100, self.status)
 
-
     def main_window(self, *args):
         self.mainframe = Frame(self.root)
         self.mainframe.grid(column=0, row=0, sticky=E+W+N+S)
         self.bottomframe = Frame(self.root)
         self.bottomframe.grid(column=0, row=1, sticky=E+W)
-        self.statusbar = Label(self.bottomframe, text=self._filehandler.statustext, anchor=W)
+        self.statusbar = Label(
+            self.bottomframe, text=self._filehandler.statustext, anchor=W)
         self.statusbar.pack(fill=BOTH, padx=0, pady=0)
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
@@ -52,11 +53,10 @@ class UserInterface(UIfunctions):
         self.sf1 = Text(self.frame_left, height=1, width=25, borderwidth=1,
                         relief="solid", highlightthickness=0)
         self.sf1.insert(1.0, "TODO: Searchbar")
-        self.sf1.grid(row=0, column=0, sticky=W+E+N+S, pady = 5)
+        self.sf1.grid(row=0, column=0, sticky=W+E+N+S, pady=5)
         self.cs = Button(self.frame_left, text="X", width=1)
         self.cs.grid(row=0, column=1)
         self.frame_left.columnconfigure(0, weight=1)
-
 
     def tree_view(self, *args):
         """
@@ -74,8 +74,6 @@ class UserInterface(UIfunctions):
 
         self.frame_left.rowconfigure(1, weight=1)
 
-
-
     def frame_vertical_bar(self, *args):
         self.vbs = []
         middlebuttons = ("New Item", "New Subitem", "Delete",
@@ -88,7 +86,7 @@ class UserInterface(UIfunctions):
             self.vbs.append(ttk.Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)
             self.vbs[a].config(command=middlefunctions[a], width=20)
-        for x in [2,3,4]:
+        for x in [2, 3, 4]:
             self.vbs[x].config(state=DISABLED)
         self.tx1 = Label(self.frame_right, text="Preview", anchor=W)
         self.tx1.grid(row=0, column=0, columnspan=3, sticky=W+E)
@@ -105,7 +103,6 @@ class UserInterface(UIfunctions):
                        relief="solid", padx=10, pady=10, highlightthickness=0)
         self.e2.grid(row=3, column=0, columnspan=3, sticky=E+W+S+N)
 
-
     def frame_bindings(self, *args):
         """
         Main key bindings
@@ -116,15 +113,15 @@ class UserInterface(UIfunctions):
             self.CTRL = "Command"
 
         def bindings_key(event):
-            #if len(str(event.keysym)) == 1:
+            # if len(str(event.keysym)) == 1:
             return("break")
         self.e1.bind("<Key>", bindings_key)
-        self.e1.bind("<Tab>", lambda a:self.focus_on(target=self.e2))
-        self.e1.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.vbs[-1]))
+        self.e1.bind("<Tab>", lambda a: self.focus_on(target=self.e2))
+        self.e1.bind(
+            "<Shift-Tab>", lambda a: self.focus_on(target=self.vbs[-1]))
 
-        self.e2.bind("<Tab>", lambda a:self.focus_on(target=self.vb1))
-        self.e2.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.e1))
-
+        self.e2.bind("<Tab>", lambda a: self.focus_on(target=self.vb1))
+        self.e2.bind("<Shift-Tab>", lambda a: self.focus_on(target=self.e1))
 
         self.vb1 = ttk.Button(self.frame_right, text="Edit")
         self.vb1.grid(row=2, column=1)
@@ -145,38 +142,40 @@ class UserInterface(UIfunctions):
         menu = Menu(self.root)
         self.root.config(menu=menu)
         file = Menu(menu)
-        file.add_command(label='New File*', accelerator=f"{self.CTRL}-n", command=self.new_file)
-        file.add_command(label='Open File...', accelerator=f"{self.CTRL}-o", command=self.open_file_dialog)
-        file.add_command(label='Save File', accelerator=f"{self.CTRL}-s", command=self.save_file)
-        file.add_command(label='Save File As...', command=self.save_file_dialog)
+        file.add_command(label='New File*',
+                         accelerator=f"{self.CTRL}-n", command=self.new_file)
+        file.add_command(
+            label='Open File...', accelerator=f"{self.CTRL}-o", command=self.open_file_dialog)
+        file.add_command(label='Save File',
+                         accelerator=f"{self.CTRL}-s", command=self.save_file)
+        file.add_command(label='Save File As...',
+                         command=self.save_file_dialog)
         file.add_command(label='Close file', command=self.close_file)
-        file.add_command(label='Exit', accelerator=f"{self.CTRL}-q", command=self.client_exit)
+        file.add_command(
+            label='Exit', accelerator=f"{self.CTRL}-q", command=self.client_exit)
         menu.add_cascade(label='File', menu=file)
-
 
         self.clickmenu = Menu(self.root, tearoff=0)
         self.clickmenu.add_command(label="Cut")
         self.clickmenu.add_command(label="Copy")
         self.clickmenu.add_command(label="Paste")
-        self.root.bind_class("Text", "<Button-2><ButtonRelease-2>", self.right_click_menu)
-
-
+        self.root.bind_class(
+            "Text", "<Button-2><ButtonRelease-2>", self.right_click_menu)
 
         menu_edit = Menu(menu)
         menu_edit.add_command(label='Select All', accelerator=f"{self.CTRL}-a",
-            command=self.select_all)
+                              command=self.select_all)
         self.root.bind(f"<{self.CTRL}-a>", self.select_all)
         self.e1.bind(f"<{self.CTRL}-a>", self.select_all)
-
 
         self.e1.bind(f"<{self.CTRL}-c>", self.root.event_generate("<<Copy>>"))
         self.e2.bind(f"<{self.CTRL}-a>", self.select_all)
         menu_edit.add_command(label='Cut', accelerator=f"{self.CTRL}-x",
-            command=lambda: self.root.event_generate("<<Cut>>"))
+                              command=lambda: self.root.event_generate("<<Cut>>"))
         menu_edit.add_command(label='Copy', accelerator=f"{self.CTRL}-c",
-            command=lambda: self.root.event_generate("<<Copy>>"))
+                              command=lambda: self.root.event_generate("<<Copy>>"))
         menu_edit.add_command(label='Paste', accelerator=f"{self.CTRL}-v",
-            command=lambda: self.root.event_generate("<<Paste>>"))
+                              command=lambda: self.root.event_generate("<<Paste>>"))
         menu.add_cascade(label='Edit', menu=menu_edit)
 
         menu_help = Menu(menu)
@@ -230,14 +229,14 @@ class UserInterface(UIfunctions):
         self.root.mainloop()
 
     def right_click_menu(self, event=None):
-        #https://stackoverflow.com/a/8476726/11514850
+        # https://stackoverflow.com/a/8476726/11514850
         w = e.widget
         self.clickmenu.entryconfigure("Cut",
-        command=lambda: w.event_generate("<<Cut>>"))
+                                      command=lambda: w.event_generate("<<Cut>>"))
         self.clickmenu.entryconfigure("Copy",
-        command=lambda: w.event_generate("<<Copy>>"))
+                                      command=lambda: w.event_generate("<<Copy>>"))
         self.clickmenu.entryconfigure("Paste",
-        command=lambda: w.event_generate("<<Paste>>"))
+                                      command=lambda: w.event_generate("<<Paste>>"))
         self.clickmenu.tk.call("tk_popup", self.clickmenu, e.x_root, e.y_root)
 
     def status(self, dummy=None):
@@ -250,6 +249,7 @@ class UserInterface(UIfunctions):
 
     def client_exit(self):
         exit()
+
 
 if __name__ == '__main__':
     from main import main
