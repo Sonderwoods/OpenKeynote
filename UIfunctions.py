@@ -18,7 +18,7 @@ class UIfunctions():
                 \tparent: {i['parent']}")
         return "\n".join(text)
 
-    def open_file_dialog(self,button=""):
+    def open_file_dialog(self, button=""):
         path = filedialog.askopenfilename(
             initialdir=self._filehandler._folder,
             title="Open File",
@@ -28,14 +28,14 @@ class UIfunctions():
             self._filehandler.set_status("Cancelled file open")
             return False
         else:
-            self.open_file(path = path)
+            self.open_file(path=path)
 
     def open_file(self, path):
         self._filehandler.set_status(f"Opening {path}")
         self._filehandler.itemlist = []
         self.itemlist = []
         self._filehandler.path = path
-        self._filehandler.read_file(path = path)
+        self._filehandler.read_file(path=path)
         self.e1.delete("1.0", END)
         self.e2.delete("1.0", END)
         self.update_tree()
@@ -82,16 +82,16 @@ class UIfunctions():
         contentlabel = Label(self.newframe, text="Content")
         contentlabel.grid(row=3, column=0)
         self.cattext = Text(self.newframe, font=("Courier", 13),
-                       padx=10, pady=10, highlightthickness=1,
-                       borderwidth=1, relief="solid", height=1)
+                            padx=10, pady=10, highlightthickness=1,
+                            borderwidth=1, relief="solid", height=1)
         self.cattext.grid(row=1, column=1, sticky=E+W)
         self.nametext = Text(self.newframe, font=("Courier", 13),
-                       padx=10, pady=10, highlightthickness=1,
-                       borderwidth=1, relief="solid", height=1)
+                             padx=10, pady=10, highlightthickness=1,
+                             borderwidth=1, relief="solid", height=1)
         self.nametext.grid(row=2, column=1, sticky=E+W)
         self.contenttext = Text(self.newframe, font=("Courier", 13),
-                       padx=10, pady=10, highlightthickness=1,
-                       borderwidth=1, relief="solid")
+                                padx=10, pady=10, highlightthickness=1,
+                                borderwidth=1, relief="solid")
         self.contenttext.grid(row=3, column=1, sticky=N+S+E+W)
         self.newframe.columnconfigure(1, weight=1)
         self.newframe.rowconfigure(3, weight=1)
@@ -100,33 +100,44 @@ class UIfunctions():
         self.okbtn.config(command=self.submit_item)
         self.cattext.insert(END, parent)
         self.cancelbtn = ttk.Button(self.newframe, text="Cancel",
-            command=self.newframe.destroy)
+                                    command=self.newframe.destroy)
         self.cancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
         self.newframe.bind("<Escape>", lambda a: self.newframe.destroy())
         self.nametext.focus()
 
-        #Tried this using lists without luck.
-        self.nametext.bind("<Tab>", lambda a:self.focus_on(target=self.contenttext))
-        self.nametext.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.cattext))
+        # Tried this using lists without luck.
+        self.nametext.bind(
+            "<Tab>", lambda a: self.focus_on(target=self.contenttext))
+        self.nametext.bind(
+            "<Shift-Tab>", lambda a: self.focus_on(target=self.cattext))
 
-        self.cattext.bind("<Tab>", lambda a:self.focus_on(target=self.nametext))
-        self.cattext.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.cancelbtn))
+        self.cattext.bind(
+            "<Tab>", lambda a: self.focus_on(target=self.nametext))
+        self.cattext.bind(
+            "<Shift-Tab>", lambda a: self.focus_on(target=self.cancelbtn))
 
-        self.contenttext.bind("<Tab>", lambda a:self.focus_on(target=self.okbtn))
-        self.contenttext.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.nametext))
+        self.contenttext.bind(
+            "<Tab>", lambda a: self.focus_on(target=self.okbtn))
+        self.contenttext.bind(
+            "<Shift-Tab>", lambda a: self.focus_on(target=self.nametext))
 
-        self.okbtn.bind("<Tab>", lambda a:self.focus_on(target=self.cancelbtn))
-        self.okbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.contenttext))
+        self.okbtn.bind("<Tab>", lambda a: self.focus_on(
+            target=self.cancelbtn))
+        self.okbtn.bind(
+            "<Shift-Tab>", lambda a: self.focus_on(target=self.contenttext))
 
-        self.cancelbtn.bind("<Tab>", lambda a:self.focus_on(target=self.cattext))
-        self.cancelbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=self.okbtn))
+        self.cancelbtn.bind(
+            "<Tab>", lambda a: self.focus_on(target=self.cattext))
+        self.cancelbtn.bind(
+            "<Shift-Tab>", lambda a: self.focus_on(target=self.okbtn))
 
     def submit_item(self, button=""):
         name = self.nametext.get("1.0", END).strip()
         parent = self.cattext.get("1.0", END).strip()
-        content = self.contenttext.get("1.0", END).replace("\n\r", "\n").strip()
+        content = self.contenttext.get(
+            "1.0", END).replace("\n\r", "\n").strip()
         self._filehandler.add_item(name, parent, content)
-        self.update_tree(selection = name, parent = parent)
+        self.update_tree(selection=name, parent=parent)
         self.newframe.destroy()
 
     def add_subitem(self, button=""):
@@ -165,12 +176,13 @@ class UIfunctions():
                 self._filehandler.itemlist[i]["content"] = newcontent
         if self.previeweditem == self.editeditem:
             self.e1.delete("1.0", END)
-            self.e1.insert(END, newcontent)
+            #self.e1.insert(END, str(newcontent).upper())
+            self.e1.insert(END, str(newcontent))
 
     def delete_item(self, button=""):
         mytree = self.get_all_children(self.l1, self.previeweditem)
         for i in mytree:
-           self._filehandler.delete_item(i)
+            self._filehandler.delete_item(i)
         self._filehandler.delete_item(self.previeweditem)
         self.update_tree()
 
@@ -194,30 +206,31 @@ class UIfunctions():
         rnframe.rowconfigure(1, weight=1)
         rnokbtn = ttk.Button(rnframe, text="OK", width=10)
         rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
-        rnokbtn.config(command=lambda:self.rename_item(
+        rnokbtn.config(command=lambda: self.rename_item(
             frame=rnframe,
             oldname=item,
             newname=rnname.get()
-            ))
+        ))
         rncancelbtn = ttk.Button(rnframe, text="Cancel",
-            command=rnframe.destroy)
+                                 command=rnframe.destroy)
         rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
         rnframe.bind("<Escape>", lambda a: rnframe.destroy())
         rnname.focus()
 
-        #Tried this using lists without luck.
-        rnname.bind("<Tab>", lambda a:self.focus_on(target=rnokbtn))
-        rnname.bind("<Shift-Tab>", lambda a:self.focus_on(target=rncancelbtn))
+        # Tried this using lists without luck.
+        rnname.bind("<Tab>", lambda a: self.focus_on(target=rnokbtn))
+        rnname.bind("<Shift-Tab>", lambda a: self.focus_on(target=rncancelbtn))
 
-        rnokbtn.bind("<Tab>", lambda a:self.focus_on(target=rncancelbtn))
-        rnokbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=rnname))
+        rnokbtn.bind("<Tab>", lambda a: self.focus_on(target=rncancelbtn))
+        rnokbtn.bind("<Shift-Tab>", lambda a: self.focus_on(target=rnname))
 
-        rncancelbtn.bind("<Tab>", lambda a:self.focus_on(target=rnname))
-        rncancelbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=rnokbtn))
+        rncancelbtn.bind("<Tab>", lambda a: self.focus_on(target=rnname))
+        rncancelbtn.bind(
+            "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
 
     def rename_item(self, event=None, frame=None, oldname="", newname=""):
         frame.destroy()
-        self._filehandler.rename_item(oldname = oldname, newname = newname)
+        self._filehandler.rename_item(oldname=oldname, newname=newname)
         self.update_tree(selection=newname)
 
     def change_parent_dialog(self, Event=None):
@@ -228,14 +241,14 @@ class UIfunctions():
                 rnokbtn.config(state=DISABLED)
 
         self.rnvar = StringVar()
-        self.rnvar.trace('w', lambda a,b,c:print("test"))
+        self.rnvar.trace('w', lambda a, b, c: print("test"))
         self.rnvar.set("awd")
         items = self.l1.selection()
         if len(items) > 1:
             item = "multiple items"
         else:
             item = items[0]
-        #print(items)
+        # print(items)
         oldparent = self.parentname
         x = self.root.winfo_pointerx()
         y = self.root.winfo_pointery()
@@ -247,10 +260,10 @@ class UIfunctions():
         namelabel = Label(rnframe, text=f"Change parent from {oldparent} to:")
         namelabel.grid(row=2, column=0, padx=10, pady=10)
         rnname = Entry(rnframe, font=("Courier", 13),
-                      highlightthickness=1,
-                      borderwidth=1, relief="solid",
-                      textvariable = self.rnvar)
-        #rnname = Entry(rnframe, font=("Courier", 13),
+                       highlightthickness=1,
+                       borderwidth=1, relief="solid",
+                       textvariable=self.rnvar)
+        # rnname = Entry(rnframe, font=("Courier", 13),
         #               highlightthickness=1,
         #               borderwidth=1, relief="solid",
         #               textvariable = self.rnvar)
@@ -265,44 +278,46 @@ class UIfunctions():
         else:
             item = self.previeweditem
         rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
-        rnokbtn.config(command=lambda:self.change_parent_submit(
+        rnokbtn.config(command=lambda: self.change_parent_submit(
             frame=rnframe,
             items=items,
             newparent=rnname.get()
-            ))
+        ))
         rncancelbtn = ttk.Button(rnframe, text="Cancel",
-            command=rnframe.destroy)
+                                 command=rnframe.destroy)
         rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
         rnframe.bind("<Escape>", lambda a: rnframe.destroy())
         rnname.focus()
         rnname.bind("<KeyRelease>", lambda a: validate_input(
-            input = rnname.get(), btn=rnokbtn))
+            input=rnname.get(), btn=rnokbtn))
 
-        rnname.bind("<Tab>", lambda a:self.focus_on(target=rnokbtn))
-        rnname.bind("<Shift-Tab>", lambda a:self.focus_on(target=rncancelbtn))
-        rnname.bind("<Return>", lambda a:self.change_parent_submit(
+        rnname.bind("<Tab>", lambda a: self.focus_on(target=rnokbtn))
+        rnname.bind("<Shift-Tab>", lambda a: self.focus_on(target=rncancelbtn))
+        rnname.bind("<Return>", lambda a: self.change_parent_submit(
             frame=rnframe,
             items=items,
             newparent=rnname.get()
-            ))
+        ))
 
-        rnokbtn.bind("<Tab>", lambda a:self.focus_on(target=rncancelbtn))
-        rnokbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=rnname))
+        rnokbtn.bind("<Tab>", lambda a: self.focus_on(target=rncancelbtn))
+        rnokbtn.bind("<Shift-Tab>", lambda a: self.focus_on(target=rnname))
 
-        rncancelbtn.bind("<Tab>", lambda a:self.focus_on(target=rnname))
-        rncancelbtn.bind("<Shift-Tab>", lambda a:self.focus_on(target=rnokbtn))
+        rncancelbtn.bind("<Tab>", lambda a: self.focus_on(target=rnname))
+        rncancelbtn.bind(
+            "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
 
     def change_parent_submit(self, event=None, frame=None, items=[], newparent=""):
         if newparent == "":
             for item in items:
                 self._filehandler.change_parent(
-                    item = item, newparent = newparent)
+                    item=item, newparent=newparent)
         else:
-            if newparent not in self._filehandler.get_names(): return
+            if newparent not in self._filehandler.get_names():
+                return
         for item in items:
             if item != newparent:
                 self._filehandler.change_parent(
-                    item = item, newparent = newparent)
+                    item=item, newparent=newparent)
             #print(f"trying to change parent of {item} to {newparent}")
         self.update_tree(selection=items[0])
         frame.destroy()
@@ -324,7 +339,6 @@ class UIfunctions():
             else:
                 open = False
             on_off_dict[name] = open
-
 
         self.l1.delete(*self.l1.get_children())
         while len(itemlist) > 0:
@@ -349,7 +363,8 @@ class UIfunctions():
                              {item["name"]}, but it was already in the list')
                         del itemlist[i]
                         uniquenames.add(item["name"])
-                    elif item["parent"] in uniquenames:  # it exists, so lets add to it.
+                    # it exists, so lets add to it.
+                    elif item["parent"] in uniquenames:
                         self.l1.insert(item["parent"], 'end',
                                        item["name"], text=item["name"])
                         del itemlist[i]
@@ -370,8 +385,7 @@ class UIfunctions():
         self.l1.selection_set(selection)
         self.l1.focus(selection)
 
-
-        #self.l1.focus_set
+        # self.l1.focus_set
 
     def change_selection(self, button):
         """
@@ -424,7 +438,8 @@ class UIfunctions():
             self.vbs[0].config(text=f"New Item")
         cs = self.get_all_children(self.l1, self.previeweditem)
         if len(cs) > 0 and len(self.previeweditem) > 0:
-            self.vbs[2].config(text=f"Delete {self.previeweditem} and {len(cs)} children")
+            self.vbs[2].config(
+                text=f"Delete {self.previeweditem} and {len(cs)} children")
         if len(ls) > 1:
             self.vbs[2].config(text=f"Delete {len(ls)} items")
         if len(self.previeweditem) > 0 and len(ls) == 1:
@@ -451,12 +466,12 @@ class UIfunctions():
 
     def about(self):
         newframe = Tk()
-        newlabel = Label(newframe, text="OpenKeynote by Mathias Sønderskov "\
-        "Nielsen.\nFor more info check out www.github.com/sonderwoods")
-        newlabel.pack(fill=BOTH,padx = 40, pady=15)
+        newlabel = Label(newframe, text="OpenKeynote by Mathias Sønderskov "
+                         "Nielsen.\nFor more info check out www.github.com/sonderwoods")
+        newlabel.pack(fill=BOTH, padx=40, pady=15)
         newframe.title("About OpenKeynote")
         bt1 = Button(newframe, text="Ok", command=newframe.destroy)
-        bt1.pack(fill=BOTH,padx = 40, pady=10)
+        bt1.pack(fill=BOTH, padx=40, pady=10)
         width = 500
         height = 120
         x = (newframe.winfo_screenwidth() // 2) - (width // 2)
@@ -480,9 +495,9 @@ class UIfunctions():
             object.move(k, '', index)
 
         # reverse sort next time
-        #TODO
-        object.heading(col, command=lambda: \
-                   self.treeview_sort_column(tv, col, not reverse))
+        # TODO
+        object.heading(col, command=lambda:
+                       self.treeview_sort_column(tv, col, not reverse))
 
     def fixUI(self, win=None):
         """
@@ -498,12 +513,11 @@ class UIfunctions():
             h = int(b[1])
             win.geometry('{}x{}'.format(w+1, h+1))
 
-    def get_all_children(self,tree,item=""):
+    def get_all_children(self, tree, item=""):
         children = tree.get_children(item)
         for child in children:
             children += self.get_all_children(tree, child)
         return children
-
 
 
 if __name__ == '__main__':
