@@ -97,7 +97,6 @@ class UserInterface(UIfunctions):
         self.tx2 = Label(self.frame_right, text="Editing", anchor=W)
         self.tx2.grid(row=2, column=0, sticky=W+E)
 
-
         self.e1 = Text(self.frame_right, fg="#555", font=("Courier", 13),
                        padx=10, pady=10, highlightthickness=0,
                        borderwidth=1, relief="solid")
@@ -119,7 +118,7 @@ class UserInterface(UIfunctions):
 
         def bindings_key(event):
             print(event.state)
-            if(event.keysym=='c' and (event.state==8 or event.state==12)):
+            if(event.keysym == 'c' and (event.state == 8 or event.state == 12)):
                 return
             else:
                 return("break")
@@ -164,7 +163,7 @@ class UserInterface(UIfunctions):
         self.clickmenu.add_command(label="Copy")
         self.clickmenu.add_command(label="Paste")
         self.root.bind_class(
-            "Text", "<Button-2><ButtonRelease-2>", lambda event=None:self.right_click_menu())
+            "Text", "<Button-2><ButtonRelease-2>", lambda event=None: self.right_click_menu())
 
         menu_edit = Menu(self.menu)
         menu_edit.add_command(label='Select All', accelerator=f"{self.CTRL}-a",
@@ -210,11 +209,9 @@ class UserInterface(UIfunctions):
             except Exception:
                 pass  # this will fail on Windows Server and maybe early Windows
 
-
         self.root.title(self.title)
         if self.path:
             self.open_file(path=self.path)
-
 
         """ TODO: ICON /Windows
 
@@ -236,10 +233,9 @@ class UserInterface(UIfunctions):
         self.root.update()
         self.root.after(0, self.fixUI)
 
-
     def right_click_menu(self, event=None):
-        x,y = self.root.winfo_pointerxy()
-        w = self.root.winfo_containing(x,y)
+        x, y = self.root.winfo_pointerxy()
+        w = self.root.winfo_containing(x, y)
         # https://stackoverflow.com/a/8476726/11514850
         #w = self.root
         self.clickmenu.entryconfigure("Cut",
@@ -248,7 +244,8 @@ class UserInterface(UIfunctions):
                                       command=lambda: w.event_generate("<<Copy>>"))
         self.clickmenu.entryconfigure("Paste",
                                       command=lambda: w.event_generate("<<Paste>>"))
-        self.clickmenu.tk.call("tk_popup", self.clickmenu, w.winfo_pointerx(), w.winfo_pointery())
+        self.clickmenu.tk.call("tk_popup", self.clickmenu,
+                               w.winfo_pointerx(), w.winfo_pointery())
 
     def update_status(self, event=None):
         """

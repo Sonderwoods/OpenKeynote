@@ -211,13 +211,14 @@ class UIfunctions():
         rnframe.bind("<Escape>", lambda e=None: rnframe.destroy())
         rnokbtn.focus()
         rnframe.bind("<y>", delete_it)
-        rnframe.bind("<n>", lambda e=None:rnframe.destroy())
+        rnframe.bind("<n>", lambda e=None: rnframe.destroy())
         rnokbtn.bind("<Return>", delete_it)
         rncancelbtn.bind("<Return>", lambda e=None: rnframe.destroy)
-        for i in ["Tab","Right"]:
+        for i in ["Tab", "Right"]:
             rnokbtn.bind(f"<{i}>", delete_it)
-        for i in ["Shift-Tab","Left"]:
-            rncancelbtn.bind(f"<{i}>", lambda e=None: self.focus_on(target=rnokbtn))
+        for i in ["Shift-Tab", "Left"]:
+            rncancelbtn.bind(
+                f"<{i}>", lambda e=None: self.focus_on(target=rnokbtn))
 
     def delete_items(self, event=None, items=[], frame=None):
         for item in items:
@@ -505,6 +506,7 @@ class UIfunctions():
 
     def select_all(self, event=None):
         self.root.focus_get().tag_add('sel', '1.0', 'end-1c')
+        #self.root.focus_get().tag_add('sel', '1.0', END-1)
 
     def focus_next(self, event=None):
         event.tk_focusNext().focus()
