@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+# OpenKeynote
+# Copyright Mathias Sønderskov Nielsen 2019
+
 import os
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
 from UIfunctions import UIfunctions
-
 
 class UserInterface(UIfunctions):
     def __init__(self, filehandler, path=None):
@@ -113,13 +115,18 @@ class UserInterface(UIfunctions):
         """
         if os.name == "nt":
             self.CTRL = "Control"
+            self.MBTN = "3"
         else:
             self.CTRL = "Command"
+            self.MBTN = "2"
 
         def bindings_key(event):
-            print(event.state)
-            if(event.keysym == 'c' and (event.state == 8 or event.state == 12)):
+            #print(event.state)
+            if event.state == 8 or event.state == 12:
                 return
+            #     if event.keysym in ['c','o','']
+            # if(event.keysym == 'c' and (event.state == 8 or event.state == 12)):
+            #     return
             else:
                 return("break")
 
@@ -127,6 +134,7 @@ class UserInterface(UIfunctions):
         self.e1.bind("<Tab>", lambda a: self.focus_on(target=self.e2))
         self.e1.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=self.vbs[-1]))
+
 
         self.e2.bind("<Tab>", lambda a: self.focus_on(target=self.vb1))
         self.e2.bind("<Shift-Tab>", lambda a: self.focus_on(target=self.e1))
@@ -163,7 +171,7 @@ class UserInterface(UIfunctions):
         self.clickmenu.add_command(label="Copy")
         self.clickmenu.add_command(label="Paste")
         self.root.bind_class(
-            "Text", "<Button-2><ButtonRelease-2>", lambda event=None: self.right_click_menu())
+            "Text", f"<Button-{self.MBTN}><ButtonRelease-{self.MBTN}>", lambda event=None: self.right_click_menu())
 
         menu_edit = Menu(self.menu)
         menu_edit.add_command(label='Select All', accelerator=f"{self.CTRL}-a",
@@ -188,6 +196,9 @@ class UserInterface(UIfunctions):
         for i in "Up,Down,Enter,Left".split(","):
             self.root.bind("<"+i+">", self.change_selection)
 
+
+        self.e1.bind(f"<{self.CTRL}-s>", None)
+        self.e1.bind(f"<{self.CTRL}-o>", None)
         self.root.bind(f"<{self.CTRL}-s>", self.save_file)
         self.root.bind(f"<{self.CTRL}-o>", self.open_file_dialog)
 
