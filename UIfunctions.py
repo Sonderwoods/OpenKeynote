@@ -32,6 +32,7 @@ class UIfunctions():
             return False
         else:
             self.open_file(path=path)
+            # re
 
     def open_file(self, path):
         self._filehandler.set_status(f"Opening {path}")
