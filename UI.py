@@ -10,6 +10,7 @@ from tkinter import ttk
 from tkinter import filedialog
 from UIfunctions import UIfunctions
 
+
 class UserInterface(UIfunctions):
     def __init__(self, filehandler, path=None):
         self.title = "OpenKeynote (BETA)"
@@ -20,6 +21,7 @@ class UserInterface(UIfunctions):
         self.previeweditem = ""
         self.editeditem = ""
 
+        self._default_title = self.title
         self.main_window()
         self.tree_view()
         self.frame_vertical_bar()
@@ -28,6 +30,7 @@ class UserInterface(UIfunctions):
 
         self.update_status()
         self.root.mainloop()
+        self.parentname = ""
 
     def main_window(self, *args):
         self.mainframe = Frame(self.root)
@@ -121,7 +124,7 @@ class UserInterface(UIfunctions):
             self.MBTN = "2"
 
         def bindings_key(event):
-            #print(event.state)
+            # print(event.state)
             if event.state == 8 or event.state == 12:
                 return
             #     if event.keysym in ['c','o','']
@@ -134,7 +137,6 @@ class UserInterface(UIfunctions):
         self.e1.bind("<Tab>", lambda a: self.focus_on(target=self.e2))
         self.e1.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=self.vbs[-1]))
-
 
         self.e2.bind("<Tab>", lambda a: self.focus_on(target=self.vb1))
         self.e2.bind("<Shift-Tab>", lambda a: self.focus_on(target=self.e1))
@@ -154,7 +156,7 @@ class UserInterface(UIfunctions):
         self.root.config(menu=self.menu)
         file = Menu(self.menu)
         file.add_command(label='New File*',
-                         accelerator=f"{self.CTRL}-n", command=self.new_file)
+                         accelerator=f"{self.CTRL}-n", command=self.close_file)
         file.add_command(
             label='Open File...', accelerator=f"{self.CTRL}-o", command=self.open_file_dialog)
         file.add_command(label='Save File',
@@ -196,15 +198,19 @@ class UserInterface(UIfunctions):
         for i in "Up,Down,Enter,Left".split(","):
             self.root.bind("<"+i+">", self.change_selection)
 
-
+        self.e1.bind("<F2>", self.rename_item_dialog)
         self.e1.bind(f"<{self.CTRL}-s>", None)
         self.e1.bind(f"<{self.CTRL}-o>", None)
+        self.root.bind("<F2>", self.rename_item_dialog)
         self.root.bind(f"<{self.CTRL}-s>", self.save_file)
         self.root.bind(f"<{self.CTRL}-o>", self.open_file_dialog)
 
     def copy_text(self, event=None):
         w = self.root.focus_get()
         w.event_generate("<<Copy>>")
+
+    def update_title(self, title=""):
+        self.root.title(title)
 
     def frame_setup(self, *args):
         """
@@ -232,14 +238,14 @@ class UserInterface(UIfunctions):
         self.root.iconphoto(True, img) # you may also want to try this.
         self.root.call('wm','iconphoto', self.root._w, img)
         """
-        self.width = int(self.root.winfo_screenwidth()-500)
+        self.width = min(int(self.root.winfo_screenwidth()-500), 1500)
         self.height = int(self.root.winfo_screenheight()-500)
         self.root.winfo_width()
         self.root.winfo_height()
         self.x = (self.root.winfo_screenwidth() // 2) - (self.width // 2)
-        self.x = 0
+        #self.x = 0
         self.y = (self.root.winfo_screenheight() // 2) - (self.height // 2)
-        self.y = 50
+        #self.y = 50
         self.root.geometry(f"{self.width}x{self.height}+{self.x}+{self.y}")
         self.root.update()
         self.root.after(0, self.fixUI)

@@ -7,11 +7,12 @@
 from shutil import copyfile
 from datetime import datetime
 from tkinter import *
-from tkinter import ttk
-from tkinter import filedialog
+#from tkinter import ttk
+#from tkinter import filedialog
 from pathlib import Path
 import io
 import os
+
 
 class FileHandler():
     """
@@ -55,9 +56,9 @@ class FileHandler():
             with open(path, "r", encoding="utf-16", newline="") as f:
                 chars = f.read()
         except UnicodeError:
-            self.set_status("Imported file failed in utf-16,"\
-            " attempting iso-8859-1", override=True)
-            #with open(path, "r", encoding="mac roman", newline="") as f:
+            self.set_status("Imported file failed in utf-16,"
+                            " attempting iso-8859-1", override=True)
+            # with open(path, "r", encoding="mac roman", newline="") as f:
             #    chars = f.read()
             with open(path, "r", encoding="iso-8859-1", newline="") as f:
                 chars = f.read()
@@ -91,7 +92,7 @@ class FileHandler():
         """
         if path == "":
             return
-        path = path / ".test"
+        #path = path / ".test"
         try:
             with open(path, 'w', newline='') as f:
                 for i, item in enumerate(self.itemlist):
@@ -143,7 +144,7 @@ class FileHandler():
 
     def set_status(self, message="", override=False):
         print(message)
-        if len(self._statuslist)>0 and override == False:
+        if len(self._statuslist) > 0 and override == False:
             self._statuslist.append(message)
         else:
             self._statuslist.append(message)
@@ -152,12 +153,12 @@ class FileHandler():
 
     def refresh_status(self):
         if self._statustimer < 25:
-            if len(self._statuslist)>0:
-                self._statustimer += 2 #shorter delay if queued stuff
+            if len(self._statuslist) > 0:
+                self._statustimer += 2  # shorter delay if queued stuff
             else:
                 self._statustimer += 1
         else:
-            if len(self._statuslist)>0:
+            if len(self._statuslist) > 0:
                 self.statustext = self._statuslist.pop(0)
             else:
                 self.statustext = self._status_standard

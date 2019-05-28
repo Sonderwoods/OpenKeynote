@@ -8,6 +8,8 @@ import os
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+from pathlib import Path
+
 
 class UIfunctions():
     """
@@ -31,7 +33,6 @@ class UIfunctions():
             return False
         else:
             self.open_file(path=path)
-            # re
 
     def open_file(self, path):
         self._filehandler.set_status(f"Opening {path}")
@@ -42,7 +43,8 @@ class UIfunctions():
         self.e1.delete("1.0", END)
         self.e2.delete("1.0", END)
         self.update_tree()
-        self.root.title(self.title + " - " + str(path))
+        self.change_selection()
+        self.update_title(self._default_title + " - " + str(path))
 
     def save_file_dialog(self, event=None):
         path = filedialog.asksaveasfilename(
@@ -50,26 +52,28 @@ class UIfunctions():
             title="Save File",
             filetypes=(("text files", "*.txt"), ("all files", "*.*")))
         if path != None and path != "":
-            self._filehandler.path = path
-            self.save_file(path=path)
+            self._filehandler.path = Path(path)
+            self.save_file(path=self._filehandler.path)
 
-    def save_file(self, event=None, path=""):
-        if path != "":
-            self._filehandler.write_file(path)
-        else:
+    def save_file(self, e=None, path=""):
+        if path == "":
             if self._filehandler.path != "" and self._filehandler.path != None:
-                self._filehandler.write_file(self._filehandler.path)
+                path = self._filehandler.path
             else:
-                self._filehandler.set_status("tried to save unknown path")
-
-    def new_file(self, event=None):
-        self._filehandler.set_status("Missing New file function")
+                self._filehandler.set_status(
+                    "Warning: tried to save unknown path")
+                return False
+        self._filehandler.write_file(path)
+        self.update_title(self._default_title + " - " + str())
 
     def close_file(self):
         self.e1.delete("1.0", END)
         self.e2.delete("1.0", END)
         self._filehandler.clear_memory()
         self.l1.delete(*self.l1.get_children())
+        self.change_selection()
+        self.update_title(title=self._default_title)
+        self._filehandler.path = ""
 
     def add_item(self, event=None, parent=""):
         x = self.root.winfo_pointerx()
@@ -134,6 +138,7 @@ class UIfunctions():
             "<Tab>", lambda a: self.focus_on(target=self.cattext))
         self.cancelbtn.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=self.okbtn))
+        self.newframe.focus_force()
 
     def submit_item(self, event=None):
         name = self.nametext.get("1.0", END).strip()
@@ -219,6 +224,7 @@ class UIfunctions():
         for i in ["Shift-Tab", "Left"]:
             rncancelbtn.bind(
                 f"<{i}>", lambda e=None: self.focus_on(target=rnokbtn))
+        rnframe.focus_force()
 
     def delete_items(self, event=None, items=[], frame=None):
         for item in items:
@@ -233,14 +239,16 @@ class UIfunctions():
             self._filehandler.set_status(f"Deleted {len(items)} items")
         else:
             self._filehandler.set_status(f"Deleted {item}")
-
         if frame:
             frame.destroy()
 
     def rename_item_dialog(self, event=None):
+        if len(self.l1.selection()) == 0:
+            return
         self.update_tree()
+
         def validate_input(input="", btn=None):
-            if input in self._filehandler.get_names() or len(input)==0:
+            if input in self._filehandler.get_names() or len(input) == 0:
                 rnokbtn.config(state=DISABLED)
                 return False
             else:
@@ -301,9 +309,11 @@ class UIfunctions():
         rncancelbtn.bind("<Tab>", lambda a: self.focus_on(target=rnname))
         rncancelbtn.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
+        rnframe.focus_force()
 
     def rename_item(self, event=None, frame=None, oldname="", newname=""):
-        if len(newname) == 0: return
+        if len(newname) == 0:
+            return
         frame.destroy()
         self._filehandler.rename_item(oldname=oldname, newname=newname)
         self.update_tree(selection=newname)
@@ -375,6 +385,7 @@ class UIfunctions():
         rncancelbtn.bind("<Tab>", lambda a: self.focus_on(target=rnname))
         rncancelbtn.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
+        rnframe.focus_force()
 
     def change_parent_submit(self, event=None, frame=None, items=[], newparent=""):
         if newparent == "":
@@ -414,6 +425,9 @@ class UIfunctions():
         while len(itemlist) > 0:
             for i, item in enumerate(itemlist):
                 if item["name"] not in uniquenames:
+                    if item["name"] == "":
+                        del itemlist[i]
+                        continue
                     if item["parent"] == "":
                         try:
                             self.l1.insert(
@@ -429,9 +443,9 @@ class UIfunctions():
                                     else:
                                         self.l1.item(item["name"], open=False)
                         except TclError:
-                            self._filehandler.set_status(f'Error: Tried \
-                            to add item {item["name"]},\
-                            but it was already in the list')
+                            self._filehandler.set_status('Warning: Tried '
+                                                         f'to add item {item["name"]},'
+                                                         'but it was already in the list')
                         del itemlist[i]
                         uniquenames.add(item["name"])
                     # it exists, so lets add to it.
@@ -540,7 +554,7 @@ class UIfunctions():
     def about(self, event=None):
         newframe = Tk()
         newlabel = Label(newframe, text="OpenKeynote by Mathias Sønderskov "
-            "Nielsen.\nFor more info check out www.github.com/sonderwoods")
+                         "Nielsen.\nFor more info check out www.github.com/sonderwoods")
         newlabel.pack(fill=BOTH, padx=40, pady=15)
         newframe.title("About OpenKeynote")
         bt1 = Button(newframe, text="Ok", command=newframe.destroy)
