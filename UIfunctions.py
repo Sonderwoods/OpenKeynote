@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+# OpenKeynote
+# Copyright Mathias Sønderskov Nielsen 2019
+
 import os
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
-# OpenKeynote
-# Copyright Mathias Sønderskov Nielsen 2019
-
 
 class UIfunctions():
     """
@@ -27,7 +27,6 @@ class UIfunctions():
             title="Open File",
             filetypes=(("text files", "*.txt"), ("All files", "*.*")))
         if path == "" or path == None:
-            #print("Canceled file open")
             self._filehandler.set_status("Cancelled file open")
             return False
         else:
@@ -239,11 +238,22 @@ class UIfunctions():
             frame.destroy()
 
     def rename_item_dialog(self, event=None):
+        self.update_tree()
         def validate_input(input="", btn=None):
-            if input in self._filehandler.get_names():
+            if input in self._filehandler.get_names() or len(input)==0:
                 rnokbtn.config(state=DISABLED)
+                return False
             else:
                 rnokbtn.config(state=NORMAL)
+                return True
+        # def submit(input="", frame=None, oldname=""):
+        #     if validate_input(input=input):
+        #         self.rename_item(
+        #             frame=frame,
+        #             oldname=oldname,
+        #             newname=input
+        #         )
+
         item = self.previeweditem
         x = self.root.winfo_pointerx()
         y = self.root.winfo_pointery()
@@ -261,7 +271,7 @@ class UIfunctions():
 
         rnframe.columnconfigure(1, weight=1)
         rnframe.rowconfigure(1, weight=1)
-        rnokbtn = ttk.Button(rnframe, text="OK", width=10)
+        rnokbtn = ttk.Button(rnframe, text="OK", width=10, state=DISABLED)
         rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
         rnokbtn.config(command=lambda: self.rename_item(
             frame=rnframe,
@@ -271,7 +281,12 @@ class UIfunctions():
         rncancelbtn = ttk.Button(rnframe, text="Cancel",
                                  command=rnframe.destroy)
         rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
-        rnframe.bind("<Escape>", lambda a: rnframe.destroy())
+        rnframe.bind("<Escape>", lambda e=None: rnframe.destroy())
+        rnframe.bind("<Return>", lambda e=None: self.rename_item(
+            frame=rnframe,
+            oldname=item,
+            newname=rnname.get()
+        ))
         rnname.focus()
 
         # Tried this using lists without luck.
@@ -288,6 +303,7 @@ class UIfunctions():
             "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
 
     def rename_item(self, event=None, frame=None, oldname="", newname=""):
+        if len(newname) == 0: return
         frame.destroy()
         self._filehandler.rename_item(oldname=oldname, newname=newname)
         self.update_tree(selection=newname)
@@ -304,7 +320,6 @@ class UIfunctions():
             item = "multiple items"
         else:
             item = items[0]
-        # print(items)
         oldparent = self.parentname
         x = self.root.winfo_pointerx()
         y = self.root.winfo_pointery()
@@ -373,11 +388,11 @@ class UIfunctions():
             if item != newparent:
                 self._filehandler.change_parent(
                     item=item, newparent=newparent)
-            #print(f"trying to change parent of {item} to {newparent}")
         self.update_tree(selection=items[0])
         frame.destroy()
 
     def update_tree(self, selection=None, parent=None, op=""):
+        self.change_selection()
         if selection == None:
             selection = self.l1.focus()
 
@@ -414,8 +429,9 @@ class UIfunctions():
                                     else:
                                         self.l1.item(item["name"], open=False)
                         except TclError:
-                            self._filehandler.set_status(f'Error: Tried to add item\
-                             {item["name"]}, but it was already in the list')
+                            self._filehandler.set_status(f'Error: Tried \
+                            to add item {item["name"]},\
+                            but it was already in the list')
                         del itemlist[i]
                         uniquenames.add(item["name"])
                     # it exists, so lets add to it.
@@ -524,7 +540,7 @@ class UIfunctions():
     def about(self, event=None):
         newframe = Tk()
         newlabel = Label(newframe, text="OpenKeynote by Mathias Sønderskov "
-                         "Nielsen.\nFor more info check out www.github.com/sonderwoods")
+            "Nielsen.\nFor more info check out www.github.com/sonderwoods")
         newlabel.pack(fill=BOTH, padx=40, pady=15)
         newframe.title("About OpenKeynote")
         bt1 = Button(newframe, text="Ok", command=newframe.destroy)

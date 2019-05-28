@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+# OpenKeynote
+# Copyright Mathias Sønderskov Nielsen 2019
+
 from shutil import copyfile
 from datetime import datetime
 from tkinter import *
@@ -9,9 +12,6 @@ from tkinter import filedialog
 from pathlib import Path
 import io
 import os
-# OpenKeynote
-# Copyright Mathias Sønderskov Nielsen 2019
-
 
 class FileHandler():
     """
@@ -19,15 +19,21 @@ class FileHandler():
     """
 
     def __init__(self, path=None, prebackup=True):
-        self._folder = ""
-        self._dict = {}
+
         self.path = path
         self.itemlist = []
-        self.status_standard = "Copyright Mathias Sønderskov Nielsen 2019"
-        self.statustext = self.status_standard
-        self.statustimer = 0
 
+        self._folder = ""
+        self._dict = {}
         self._prebackup = prebackup
+        self._status_standard = "Copyright Mathias Sønderskov Nielsen 2019"
+        self.statustext = self._status_standard
+        self._statustimer = 0
+        self._statuslist = []
+
+        self.setup_paths()
+
+    def setup_paths(self):
 
         if self.path != None:
             self.path = self.path.replace("\\", "/")
@@ -43,32 +49,40 @@ class FileHandler():
             except AttributeError:
                 pass
 
-        # self.open_file()
-
     def read_file(self, path=""):
         templist = []
-        with open(path, "r", encoding="utf-16", newline="") as f:
-            chars = f.read().split("\r")
+        try:
+            with open(path, "r", encoding="utf-16", newline="") as f:
+                chars = f.read()
+        except UnicodeError:
+            self.set_status("Imported file failed in utf-16,"\
+            " attempting iso-8859-1", override=True)
+            #with open(path, "r", encoding="mac roman", newline="") as f:
+            #    chars = f.read()
+            with open(path, "r", encoding="iso-8859-1", newline="") as f:
+                chars = f.read()
 
-            for chunk in chars:
-                try:
-                    name = str(chunk[0:].split("\t")[0]).strip()
-                    name = name.replace("\t", "")
-                except IndexError:
-                    name = ""
-                try:
-                    content = str(chunk[0:].split("\t")[1])
-                except IndexError:
-                    content = ""
-                try:
-                    parent = chunk[1:].strip().split("\t")[2].strip()
-                except IndexError:
-                    parent = ""
-                templist.append(
-                    {"name": name, "content": content, "parent": parent})
-            templist = sorted(templist, key=lambda i: i['name'] in templist)
+        chars = chars.split("\r")
+
+        for chunk in chars:
+            try:
+                name = str(chunk[0:].split("\t")[0]).strip()
+                name = name.replace("\t", "")
+            except IndexError:
+                name = ""
+            try:
+                content = str(chunk[0:].split("\t")[1])
+            except IndexError:
+                content = ""
+            try:
+                parent = chunk[1:].strip().split("\t")[2].strip()
+            except IndexError:
+                parent = ""
+            templist.append(
+                {"name": name, "content": content, "parent": parent})
+        templist = sorted(templist, key=lambda i: i['name'] in templist)
         self.itemlist = templist
-        self.set_status(message="Successfully read file")
+        self.set_status(message=f"Successfully read {path}")
         return True
 
     def write_file(self, path=""):
@@ -77,7 +91,7 @@ class FileHandler():
         """
         if path == "":
             return
-        path = path + ".test"
+        path = path / ".test"
         try:
             with open(path, 'w', newline='') as f:
                 for i, item in enumerate(self.itemlist):
@@ -88,9 +102,9 @@ class FileHandler():
                         f.write("\t" + item["parent"])
                     if i < len(self.itemlist)-1:
                         f.write("\r\n")
-            print(f"Successfully saved to {path}")
+            self.set_status(f"Successfully saved to {path}")
         except:
-            print("Error trying to save the file")
+            self.set_status("Error trying to save the file")
 
     def clear_memory(self):
         """
@@ -127,17 +141,27 @@ class FileHandler():
             if item == entry["name"]:
                 self.itemlist.remove(entry)
 
-    def set_status(self, message=""):
+    def set_status(self, message="", override=False):
         print(message)
-        self.statustext = message
-        self.statustimer = 0
+        if len(self._statuslist)>0 and override == False:
+            self._statuslist.append(message)
+        else:
+            self._statuslist.append(message)
+            self.statustext = message
+        self._statustimer = 0
 
     def refresh_status(self):
-        if self.statustimer < 25:
-            self.statustimer += 1
+        if self._statustimer < 25:
+            if len(self._statuslist)>0:
+                self._statustimer += 2 #shorter delay if queued stuff
+            else:
+                self._statustimer += 1
         else:
-            self.statustimer = 0
-            self.statustext = self.status_standard
+            if len(self._statuslist)>0:
+                self.statustext = self._statuslist.pop(0)
+            else:
+                self.statustext = self._status_standard
+            self._statustimer = 0
         return self.statustext
 
     def get_names(self, event=None):
