@@ -7,6 +7,7 @@
 import os
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 from tkinter import filedialog
 from pathlib import Path
 
@@ -552,19 +553,9 @@ class UIfunctions():
         return("break")
 
     def about(self, event=None):
-        newframe = Tk()
-        newlabel = Label(newframe, text="OpenKeynote by Mathias Sønderskov "
-                         "Nielsen.\nFor more info check out www.github.com/sonderwoods")
-        newlabel.pack(fill=BOTH, padx=40, pady=15)
-        newframe.title("About OpenKeynote")
-        bt1 = Button(newframe, text="Ok", command=newframe.destroy)
-        bt1.pack(fill=BOTH, padx=40, pady=10)
-        width = 500
-        height = 120
-        x = (newframe.winfo_screenwidth() // 2) - (width // 2)
-        y = (newframe.winfo_screenheight() // 2) - (height // 2)
-        newframe.geometry(f"{width}x{height}+{x}+{y}")
-        newframe.bind("<Escape>", lambda e=None: newframe.destroy())
+        messagebox.showinfo("About OpenKeynote",
+        "OpenKeynote\n2019, Mathias Sønderskov Nielsen\n\
+For more info - www.github.com/sonderwoods")
 
     # def copy_text(self, event=None):
     #     print("x")

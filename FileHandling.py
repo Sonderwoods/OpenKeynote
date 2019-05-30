@@ -12,8 +12,8 @@ from tkinter import *
 from pathlib import Path
 import io
 import os
-
-
+#import sys
+#print(sys.getdefaultencoding())
 class FileHandler():
     """
     Class to handle file loading and saving

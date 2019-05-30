@@ -8,7 +8,11 @@ import os
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import scrolledtext
+from tkinter import messagebox
 from UIfunctions import UIfunctions
+from pathlib import Path
+import sys
 
 
 class UserInterface(UIfunctions):
@@ -66,6 +70,7 @@ class UserInterface(UIfunctions):
         self.cs.grid(row=0, column=1)
         self.frame_left.columnconfigure(0, weight=1)
 
+
     def tree_view(self, *args):
         """
         Tree view
@@ -102,13 +107,13 @@ class UserInterface(UIfunctions):
         self.tx2 = Label(self.frame_right, text="Editing", anchor=W)
         self.tx2.grid(row=2, column=0, sticky=W+E)
 
-        self.e1 = Text(self.frame_right, fg="#555", font=("Courier", 13),
-                       padx=10, pady=10, highlightthickness=0,
-                       borderwidth=1, relief="solid")
-
+        self.e1 = scrolledtext.ScrolledText(self.frame_right, fg="#555", font=("Courier", 13),
+                        padx=10, pady=10, highlightthickness=0,
+                        borderwidth=1, relief="solid")
         self.e1.grid(row=1, column=0, columnspan=3, sticky=N+S+E+W)
+        #was Text before
 
-        self.e2 = Text(self.frame_right, font=("Courier", 13), borderwidth=1,
+        self.e2 = scrolledtext.ScrolledText(self.frame_right, font=("Courier", 13), borderwidth=1,
                        relief="solid", padx=10, pady=10, highlightthickness=0)
         self.e2.grid(row=3, column=0, columnspan=3, sticky=E+W+S+N)
 
@@ -132,7 +137,8 @@ class UserInterface(UIfunctions):
             #     return
             else:
                 return("break")
-
+        self.sf1.bind("<Tab>", lambda a: self.focus_on(target=self.l1))
+        self.sf1.bind("<Shift-Tab>", lambda a: self.focus_on(target=self.e2))
         self.e1.bind("<Key>", bindings_key)
         self.e1.bind("<Tab>", lambda a: self.focus_on(target=self.e2))
         self.e1.bind(
@@ -140,6 +146,7 @@ class UserInterface(UIfunctions):
 
         self.e2.bind("<Tab>", lambda a: self.focus_on(target=self.vb1))
         self.e2.bind("<Shift-Tab>", lambda a: self.focus_on(target=self.e1))
+        #self.root.bind(f"<{self.CTRL}-q>", self.client_exit)
 
         self.vb1 = ttk.Button(self.frame_right, text="Edit")
         self.vb1.grid(row=2, column=1)
@@ -154,7 +161,7 @@ class UserInterface(UIfunctions):
 
         self.menu = Menu(self.root)
         self.root.config(menu=self.menu)
-        file = Menu(self.menu)
+        file = Menu(self.menu, tearoff=0) #TODO is it a win thing?
         file.add_command(label='New File*',
                          accelerator=f"{self.CTRL}-n", command=self.close_file)
         file.add_command(
@@ -195,7 +202,7 @@ class UserInterface(UIfunctions):
         menu_help.add_command(label='About', command=self.about)
         self.menu.add_cascade(label='Help', menu=menu_help)
 
-        for i in "Up,Down,Enter,Left".split(","):
+        for i in "Up,Down,Right,Return,Left".split(","):
             self.root.bind("<"+i+">", self.change_selection)
 
         self.e1.bind("<F2>", self.rename_item_dialog)
@@ -220,11 +227,21 @@ class UserInterface(UIfunctions):
         # sharp fonts in high res (https://stackoverflow.com/questions/41315873/
         # attempting-to-resolve-blurred-tkinter-text-scaling-on-windows-10-high-dpi-disp)
         if os.name == "nt":
+            #TODO
+            #self.root.protocol("WM_DELETE_WINDOW", self.client_exit)
             from ctypes import windll, pointer, wintypes
             try:
                 windll.shcore.SetProcessDpiAwareness(1)
             except Exception:
                 pass  # this will fail on Windows Server and maybe early Windows
+            # TODO: Put link to ico file on windows.
+            try:
+                iconpath = Path("icon.ico")
+                self.root.iconbitmap(Path())
+            except:
+                print("error with icon")
+            else: #mac?
+                self.root.createcommand('exit', self.client_exit)
 
         self.root.title(self.title)
         if self.path:
@@ -250,6 +267,8 @@ class UserInterface(UIfunctions):
         self.root.update()
         self.root.after(0, self.fixUI)
 
+
+
     def right_click_menu(self, event=None):
         x, y = self.root.winfo_pointerxy()
         w = self.root.winfo_containing(x, y)
@@ -271,8 +290,15 @@ class UserInterface(UIfunctions):
         self.statusbar.config(text=self._filehandler.refresh_status())
         self.root.after(100, self.update_status)
 
-    def client_exit(self):
-        exit()
+    def client_exit(self, *args):
+        answer = messagebox.askyesnocancel('quit?','Save file first?')
+        if answer == True:
+            self.save_file()
+            sys.exit()
+        if answer == None:
+            return
+        if answer == False:
+            exit()
 
 
 if __name__ == '__main__':
