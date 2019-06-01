@@ -6,13 +6,12 @@
 
 from shutil import copyfile
 from datetime import datetime
-from tkinter import *
-#from tkinter import ttk
-#from tkinter import filedialog
+# from tkinter import *
+# from tkinter import ttk
+# from tkinter import filedialog
 from pathlib import Path
-import io
 import os
-#import sys
+# import sys
 # print(sys.getdefaultencoding())
 
 
