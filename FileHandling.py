@@ -13,7 +13,9 @@ from pathlib import Path
 import io
 import os
 #import sys
-#print(sys.getdefaultencoding())
+# print(sys.getdefaultencoding())
+
+
 class FileHandler():
     """
     Class to handle file loading and saving
@@ -191,6 +193,42 @@ class FileHandler():
                 self.itemlist[i]["parent"] = newparent
                 return True
         return False
+
+    def find_primary_case(self, *args):
+        """
+        checks database if uppercase or lowercase.
+        returns:
+            0: Mixed
+            1: primarily UPPERCASE
+            2: primarily lowercase
+            3: Uppercase Start
+        """
+        uc = 0
+        lc = 0
+        uw = 0
+        wc = 0
+        for i in self.itemlist:
+            for content in i['content']:
+                for word in content.split(" "):
+                    if len(word) > 0:
+                        if word[0].isupper():
+                            uw += 1
+                            wc += 1
+                        elif word[0].islower():
+                            wc += 1
+                        for char in word:
+                            if(char.islower()):
+                                lc += 1
+                            elif(char.isupper()):
+                                uc += 1
+        if uc > lc * 10:
+            return 1
+        if lc > uc*8:
+            if uw > wc*0.7:
+                return 3
+            else:
+                return 2
+        return 0
 
 
 if __name__ == '__main__':

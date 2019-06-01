@@ -24,6 +24,8 @@ class UserInterface(UIfunctions):
         self.root = Tk()
         self.previeweditem = ""
         self.editeditem = ""
+        self.case_selected = IntVar()
+        self.parentname = ""
 
         self._default_title = self.title
         self.main_window()
@@ -34,7 +36,6 @@ class UserInterface(UIfunctions):
 
         self.update_status()
         self.root.mainloop()
-        self.parentname = ""
 
     def main_window(self, *args):
         self.mainframe = Frame(self.root)
@@ -66,10 +67,10 @@ class UserInterface(UIfunctions):
                         relief="solid", highlightthickness=0)
         self.sf1.insert(1.0, "TODO: Searchbar")
         self.sf1.grid(row=0, column=0, sticky=W+E+N+S, pady=5)
+        self.sf1.config(state=DISABLED)
         self.cs = Button(self.frame_left, text="X", width=1)
         self.cs.grid(row=0, column=1)
         self.frame_left.columnconfigure(0, weight=1)
-
 
     def tree_view(self, *args):
         """
@@ -107,15 +108,34 @@ class UserInterface(UIfunctions):
         self.tx2 = Label(self.frame_right, text="Editing", anchor=W)
         self.tx2.grid(row=2, column=0, sticky=W+E)
 
-        self.e1 = scrolledtext.ScrolledText(self.frame_right, fg="#555", font=("Courier", 13),
-                        padx=10, pady=10, highlightthickness=0,
-                        borderwidth=1, relief="solid")
+        self.e1 = scrolledtext.ScrolledText(self.frame_right,
+                                            fg="#555", font=("Courier", 13),
+                                            padx=10, pady=10,
+                                            highlightthickness=0,
+                                            borderwidth=1, relief="solid")
         self.e1.grid(row=1, column=0, columnspan=3, sticky=N+S+E+W)
-        #was Text before
+        # was Text before
 
-        self.e2 = scrolledtext.ScrolledText(self.frame_right, font=("Courier", 13), borderwidth=1,
-                       relief="solid", padx=10, pady=10, highlightthickness=0)
+        self.e2 = scrolledtext.ScrolledText(self.frame_right,
+                                            font=("Courier", 13), borderwidth=1,
+                                            relief="solid", padx=10, pady=10,
+                                            highlightthickness=0)
         self.e2.grid(row=3, column=0, columnspan=3, sticky=E+W+S+N)
+
+        self.labelsFrame = LabelFrame(self.frame_center, text=' Change case ')
+        self.labelsFrame.pack(fill=BOTH)
+        self.case_radiobuttons = []
+        self.case_selected.set(99)
+        rbtns = ['No change', 'UPPERCASE', 'lowercase', 'First Letter']
+        for a, button_text in enumerate(rbtns):
+            self.case_radiobuttons.append(
+                Radiobutton(self.labelsFrame, text=button_text,
+                            variable=self.case_selected,
+                            value=a, command=self.change_case, width=20, anchor=W))
+            self.case_radiobuttons[a].grid(sticky="W", row=a)
+
+    def change_case(self, *args):
+        pass
 
     def bindings_and_menu(self, *args):
         """
@@ -129,16 +149,13 @@ class UserInterface(UIfunctions):
             self.MBTN = "2"
 
         def bindings_key(event):
-            # print(event.state)
             if event.state == 8 or event.state == 12:
                 return
-            #     if event.keysym in ['c','o','']
-            # if(event.keysym == 'c' and (event.state == 8 or event.state == 12)):
-            #     return
             else:
                 return("break")
+
         self.sf1.bind("<Tab>", lambda a: self.focus_on(target=self.l1))
-        self.sf1.bind("<Shift-Tab>", lambda a: self.focus_on(target=self.e2))
+        self.sf1.bind("<Shift-Tab>", lambda a: self.focus_on(target=self.vb2))
         self.e1.bind("<Key>", bindings_key)
         self.e1.bind("<Tab>", lambda a: self.focus_on(target=self.e2))
         self.e1.bind(
@@ -146,7 +163,6 @@ class UserInterface(UIfunctions):
 
         self.e2.bind("<Tab>", lambda a: self.focus_on(target=self.vb1))
         self.e2.bind("<Shift-Tab>", lambda a: self.focus_on(target=self.e1))
-        #self.root.bind(f"<{self.CTRL}-q>", self.client_exit)
 
         self.vb1 = ttk.Button(self.frame_right, text="Edit")
         self.vb1.grid(row=2, column=1)
@@ -161,11 +177,11 @@ class UserInterface(UIfunctions):
 
         self.menu = Menu(self.root)
         self.root.config(menu=self.menu)
-        file = Menu(self.menu, tearoff=0) #TODO is it a win thing?
-        file.add_command(label='New File*',
-                         accelerator=f"{self.CTRL}-n", command=self.close_file)
+        file = Menu(self.menu, tearoff=0)  # TODO is it a win thing?
+        file.add_command(label='New File*', command=self.close_file)
         file.add_command(
-            label='Open File...', accelerator=f"{self.CTRL}-o", command=self.open_file_dialog)
+            label='Open File...', accelerator=f"{self.CTRL}-o",
+            command=self.open_file_dialog)
         file.add_command(label='Save File',
                          accelerator=f"{self.CTRL}-s", command=self.save_file)
         file.add_command(label='Save File As...',
@@ -180,9 +196,10 @@ class UserInterface(UIfunctions):
         self.clickmenu.add_command(label="Copy")
         self.clickmenu.add_command(label="Paste")
         self.root.bind_class(
-            "Text", f"<Button-{self.MBTN}><ButtonRelease-{self.MBTN}>", lambda event=None: self.right_click_menu())
+            "Text", f"<Button-{self.MBTN}><ButtonRelease-{self.MBTN}>",
+            lambda event=None: self.right_click_menu())
 
-        menu_edit = Menu(self.menu)
+        menu_edit = Menu(self.menu, tearoff=0)
         menu_edit.add_command(label='Select All', accelerator=f"{self.CTRL}-a",
                               command=self.select_all)
         self.root.bind(f"<{self.CTRL}-a>", self.select_all)
@@ -198,7 +215,7 @@ class UserInterface(UIfunctions):
                               command=lambda: self.root.event_generate("<<Paste>>"))
         self.menu.add_cascade(label='Edit', menu=menu_edit)
 
-        menu_help = Menu(self.menu)
+        menu_help = Menu(self.menu, tearoff=0)
         menu_help.add_command(label='About', command=self.about)
         self.menu.add_cascade(label='Help', menu=menu_help)
 
@@ -227,7 +244,7 @@ class UserInterface(UIfunctions):
         # sharp fonts in high res (https://stackoverflow.com/questions/41315873/
         # attempting-to-resolve-blurred-tkinter-text-scaling-on-windows-10-high-dpi-disp)
         if os.name == "nt":
-            #TODO
+            # TODO
             #self.root.protocol("WM_DELETE_WINDOW", self.client_exit)
             from ctypes import windll, pointer, wintypes
             try:
@@ -240,7 +257,7 @@ class UserInterface(UIfunctions):
                 self.root.iconbitmap(Path())
             except:
                 print("error with icon")
-            else: #mac?
+            else:  # mac?
                 self.root.createcommand('exit', self.client_exit)
 
         self.root.title(self.title)
@@ -267,8 +284,6 @@ class UserInterface(UIfunctions):
         self.root.update()
         self.root.after(0, self.fixUI)
 
-
-
     def right_click_menu(self, event=None):
         x, y = self.root.winfo_pointerxy()
         w = self.root.winfo_containing(x, y)
@@ -291,7 +306,7 @@ class UserInterface(UIfunctions):
         self.root.after(100, self.update_status)
 
     def client_exit(self, *args):
-        answer = messagebox.askyesnocancel('quit?','Save file first?')
+        answer = messagebox.askyesnocancel('quit?', 'Save file first?')
         if answer == True:
             self.save_file()
             sys.exit()

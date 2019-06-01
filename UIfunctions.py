@@ -72,6 +72,7 @@ class UIfunctions():
         self.e2.delete("1.0", END)
         self._filehandler.clear_memory()
         self.l1.delete(*self.l1.get_children())
+        self.update_tree()
         self.change_selection()
         self.update_title(title=self._default_title)
         self._filehandler.path = ""
@@ -481,6 +482,11 @@ class UIfunctions():
         itemlist = self._filehandler.itemlist
         itemname = self.l1.focus()
         if len(itemlist) == 0:
+            self.vbs[0].config(state=NORMAL, text="New Item")
+            self.vbs[1].config(state=DISABLED, text="New Subitem")
+            self.vbs[2].config(state=DISABLED, text="Delete")
+            self.vbs[3].config(state=DISABLED, text="Rename")
+            self.vbs[4].config(state=DISABLED, text="Change Parent")
             return
 
         self.previeweditem = self.l1.focus()
@@ -517,7 +523,7 @@ class UIfunctions():
                     self.vbs[4].config(state=DISABLED)
             self.vbs[4].config(text=f"Change Parents")
         else:
-            self.vbs[4].config(text=f"Change Parent")
+            self.vbs[4].config(text="Change Parent")
         if len(self.parentname) > 0:
             self.vbs[0].config(text=f"New Item ({self.parentname})")
             self.vbs[1].config(state=DISABLED)
@@ -554,7 +560,7 @@ class UIfunctions():
 
     def about(self, event=None):
         messagebox.showinfo("About OpenKeynote",
-        "OpenKeynote\n2019, Mathias Sønderskov Nielsen\n\
+                            "OpenKeynote\n2019, Mathias Sønderskov Nielsen\n\
 For more info - www.github.com/sonderwoods")
 
     # def copy_text(self, event=None):
