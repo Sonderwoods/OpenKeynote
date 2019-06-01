@@ -34,23 +34,35 @@ class FileHandler():
         self._statustimer = 0
         self._statuslist = []
 
-        self.setup_paths()
+        self.set_paths_and_backup()
 
-    def setup_paths(self):
-
+    def set_paths_and_backup(self):
         if self.path != None:
-            self.path = self.path.replace("\\", "/")
-            self._folder = "/".join(self.path.split("/")[:-1])
-            self._filename = self.path.split("/")[-1]
-            self._bkfolder = self._folder + "/KNOTE_backups"
+            print(self.path)
+            self._folder = self.path.parent
+            self._filename = self.path.name
+            self._bkfolder = self._folder / "BACKUP_OpenKeynote"
 
-        if self._prebackup == True:
+        if self._prebackup == True and self.path != None:
             try:
                 self.status = f"Trying to backup to {self._bkfolder}"
-                self.create_backup(
-                    self._folder, self._filename, self._bkfolder)
+                """
+                Backups your file into a backupfolder
+                """
+                mytime = datetime.now().strftime("%Y%m%d_%H%M%S")
+                try:
+                    os.mkdir(self._bkfolder)
+                except OSError:
+                    pass  # folder already exists
+                try:
+                    targetfile = self._bkfolder / \
+                        (self.path.stem + "_" + mytime + ".txt")
+                    copyfile(self.path, targetfile)
+                    print(f"successfully backuped {targetfile}")
+                except FileNotFoundError as e:
+                    print(f"Error: Can't create backup!! ( {e} )")
             except AttributeError:
-                pass
+                print("AttributeError on backup")
 
     def read_file(self, path=""):
         templist = []
@@ -81,11 +93,15 @@ class FileHandler():
                 parent = chunk[1:].strip().split("\t")[2].strip()
             except IndexError:
                 parent = ""
+            if name.startswith("#"):
+                continue
             templist.append(
                 {"name": name, "content": content, "parent": parent})
         templist = sorted(templist, key=lambda i: i['name'] in templist)
         self.itemlist = templist
         self.set_status(message=f"Successfully read {path}")
+        self.set_paths_and_backup()
+        self.path = path
         return True
 
     def write_file(self, path=""):
@@ -116,22 +132,6 @@ class FileHandler():
         # TODO: Ask to save current file.
         self.path = ""
         self.itemlist = []
-
-    def create_backup(self, folder, filename, bkfolder):
-        """
-        Backups your file into a backupfolder
-        """
-        mytime = datetime.now().strftime("%Y%m%d_%H%M%S")
-        try:
-            os.mkdir(bkfolder)
-        except OSError:
-            pass  # folder already exists
-        try:
-            filefirstname = ".".join(filename.split(".")[:-1])
-            targetfile = bkfolder + "/" + filefirstname + "_" + mytime + ".txt"
-            copyfile(folder + "/" + filename, targetfile)
-        except FileNotFoundError as e:
-            print(f"Error: Can't create backup!! ( {e} )")
 
     def add_item(self, name, parent, content):
         print(f"adding {name}, {parent}, {content}")

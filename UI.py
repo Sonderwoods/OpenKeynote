@@ -4,15 +4,15 @@
 # OpenKeynote
 # Copyright Mathias Sønderskov Nielsen 2019
 
-import os
-from tkinter import *
-from tkinter import ttk
-from tkinter import filedialog
-from tkinter import scrolledtext
-from tkinter import messagebox
-from UIfunctions import UIfunctions
-from pathlib import Path
 import sys
+from pathlib import Path
+from UIfunctions import UIfunctions
+import os
+# from tkinter import *
+from tkinter import (ttk, Tk, PanedWindow, filedialog, scrolledtext, messagebox,
+                     BOTH, W, S, E, N, StringVar, IntVar, Button, Frame, Label,
+                     Text, Scrollbar, LabelFrame, DISABLED,
+                     NORMAL, Menu, Radiobutton, HORIZONTAL, VERTICAL, END)
 
 
 class UserInterface(UIfunctions):
@@ -245,7 +245,7 @@ class UserInterface(UIfunctions):
         # attempting-to-resolve-blurred-tkinter-text-scaling-on-windows-10-high-dpi-disp)
         if os.name == "nt":
             # TODO
-            #self.root.protocol("WM_DELETE_WINDOW", self.client_exit)
+            # self.root.protocol("WM_DELETE_WINDOW", self.client_exit)
             from ctypes import windll, pointer, wintypes
             try:
                 windll.shcore.SetProcessDpiAwareness(1)
@@ -268,7 +268,8 @@ class UserInterface(UIfunctions):
 
         self.root.iconbitmap("/Users/msn/Dropbox/py/Git/OpenKeynote/images/ico.icns")
 
-        img = Image("photo", file="/Users/msn/Dropbox/py/Git/OpenKeynote/images/large.gif")
+        img = Image(
+            "photo", file="/Users/msn/Dropbox/py/Git/OpenKeynote/images/large.gif")
         self.root.iconphoto(True, img) # you may also want to try this.
         self.root.call('wm','iconphoto', self.root._w, img)
         """
@@ -277,9 +278,9 @@ class UserInterface(UIfunctions):
         self.root.winfo_width()
         self.root.winfo_height()
         self.x = (self.root.winfo_screenwidth() // 2) - (self.width // 2)
-        #self.x = 0
+        # self.x = 0
         self.y = (self.root.winfo_screenheight() // 2) - (self.height // 2)
-        #self.y = 50
+        # self.y = 50
         self.root.geometry(f"{self.width}x{self.height}+{self.x}+{self.y}")
         self.root.update()
         self.root.after(0, self.fixUI)
@@ -288,7 +289,7 @@ class UserInterface(UIfunctions):
         x, y = self.root.winfo_pointerxy()
         w = self.root.winfo_containing(x, y)
         # https://stackoverflow.com/a/8476726/11514850
-        #w = self.root
+        # w = self.root
         self.clickmenu.entryconfigure("Cut",
                                       command=lambda: w.event_generate("<<Cut>>"))
         self.clickmenu.entryconfigure("Copy",

@@ -1,4 +1,4 @@
-import os
+import os.path
 import sys
 from UI import UserInterface
 from FileHandling import FileHandler

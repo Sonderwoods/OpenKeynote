@@ -5,10 +5,10 @@
 # Copyright Mathias Sønderskov Nielsen 2019
 
 import os
-from tkinter import *
-from tkinter import ttk
-from tkinter import messagebox
-from tkinter import filedialog
+from tkinter import (ttk, Tk, filedialog, messagebox,
+                     BOTH, W, S, E, N, StringVar, IntVar, Button, Frame, Label,
+                     Text, Scrollbar, LabelFrame, Entry, DISABLED,
+                     NORMAL, Menu, HORIZONTAL, VERTICAL, END)
 from pathlib import Path
 
 
@@ -33,7 +33,7 @@ class UIfunctions():
             self._filehandler.set_status("Cancelled file open")
             return False
         else:
-            self.open_file(path=path)
+            self.open_file(path=Path(path))
 
     def open_file(self, path):
         self._filehandler.set_status(f"Opening {path}")
@@ -46,6 +46,7 @@ class UIfunctions():
         self.update_tree()
         self.change_selection()
         self.update_title(self._default_title + " - " + str(path))
+        self.check_case()
 
     def save_file_dialog(self, event=None):
         path = filedialog.asksaveasfilename(
@@ -78,6 +79,15 @@ class UIfunctions():
         self._filehandler.path = ""
 
     def add_item(self, event=None, parent=""):
+        def validate_input(name="", parent="", btn=None):
+            if name in self._filehandler.get_names() or len(name) == 0:
+                btn.config(state=DISABLED)
+                return False
+            if parent not in self._filehandler.get_names() and len(parent) > 0:
+                btn.config(state=DISABLED)
+                return False
+            btn.config(state=NORMAL)
+            return True
         x = self.root.winfo_pointerx()
         y = self.root.winfo_pointery()
         absx = self.root.winfo_pointerx() - self.root.winfo_rootx()
@@ -94,6 +104,10 @@ class UIfunctions():
         self.cattext = Text(self.newframe, font=("Courier", 13),
                             padx=10, pady=10, highlightthickness=1,
                             borderwidth=1, relief="solid", height=1)
+
+        # self.cattext = Entry(self.newframe, font=("Courier", 13),
+        #                      highlightthickness=1,
+        #                      borderwidth=1, relief="solid")
         self.cattext.grid(row=1, column=1, sticky=E+W)
         self.nametext = Text(self.newframe, font=("Courier", 13),
                              padx=10, pady=10, highlightthickness=1,
@@ -116,11 +130,18 @@ class UIfunctions():
         self.nametext.focus()
 
         # Tried this using lists without luck.
+        self.nametext.bind("<KeyRelease>", lambda a: validate_input(
+            name=self.nametext.get("1.0", "end-1c"),
+            parent=self.cattext.get("1.0", "end-1c"),
+            btn=self.okbtn))
         self.nametext.bind(
             "<Tab>", lambda a: self.focus_on(target=self.contenttext))
         self.nametext.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=self.cattext))
-
+        self.cattext.bind("<KeyRelease>", lambda e=None: validate_input(
+            name=self.nametext.get("1.0", "end-1c"),
+            parent=self.cattext.get("1.0", "end-1c"),
+            btn=self.okbtn))
         self.cattext.bind(
             "<Tab>", lambda a: self.focus_on(target=self.nametext))
         self.cattext.bind(
@@ -143,10 +164,10 @@ class UIfunctions():
         self.newframe.focus_force()
 
     def submit_item(self, event=None):
-        name = self.nametext.get("1.0", END).strip()
-        parent = self.cattext.get("1.0", END).strip()
+        name = self.nametext.get("1.0", "end-1c").strip()
+        parent = self.cattext.get("1.0", "end-1c").strip()
         content = self.contenttext.get(
-            "1.0", END).replace("\n\r", "\n").strip()
+            "1.0", "end-1c").replace("\n\r", "\n").strip()
         self._filehandler.add_item(name, parent, content)
         self.update_tree(selection=name, parent=parent)
         self.newframe.destroy()
@@ -158,6 +179,8 @@ class UIfunctions():
         itemlist = self._filehandler.itemlist
         self.e2.delete("1.0", END)
         self.e2.insert(END, self.e1.get("1.0", "end-1c"))
+        self.e2.focus()
+        self.e2.mark_set('insert', '1.0')
 
         self.editeditem = self.previeweditem
         name = self.editeditem
@@ -176,9 +199,21 @@ class UIfunctions():
         and redraws tree, and selects where we were.
         1) resave Dictionary
         2) update "edit field"
-        """
 
+                0: Mixed
+                1: primarily UPPERCASE
+                2: primarily lowercase
+                3: Uppercase Start
+        """
         newcontent = self.e2.get("1.0", "end-1c")
+        print(f"saving.. case is {self.case_selected.get()}")
+        if self.case_selected.get() == 1:
+            newcontent = str(newcontent).upper()
+        if self.case_selected.get() == 2:
+            newcontent = str(newcontent).lower()
+        if self.case_selected.get() == 3:
+            newcontent = str(newcontent).title()
+
         for i, k in enumerate(self.itemlist):    # update Dictionary
             if k["name"] == self.editeditem:
                 self._filehandler.itemlist[i]["content"] = newcontent
@@ -247,7 +282,6 @@ class UIfunctions():
     def rename_item_dialog(self, event=None):
         if len(self.l1.selection()) == 0:
             return
-        self.update_tree()
 
         def validate_input(input="", btn=None):
             if input in self._filehandler.get_names() or len(input) == 0:
@@ -256,13 +290,6 @@ class UIfunctions():
             else:
                 rnokbtn.config(state=NORMAL)
                 return True
-        # def submit(input="", frame=None, oldname=""):
-        #     if validate_input(input=input):
-        #         self.rename_item(
-        #             frame=frame,
-        #             oldname=oldname,
-        #             newname=input
-        #         )
 
         item = self.previeweditem
         x = self.root.winfo_pointerx()
@@ -326,7 +353,6 @@ class UIfunctions():
                 rnokbtn.config(state=NORMAL)
             else:
                 rnokbtn.config(state=DISABLED)
-
         items = self.l1.selection()
         if len(items) > 1:
             item = "multiple items"
@@ -405,7 +431,7 @@ class UIfunctions():
         frame.destroy()
 
     def update_tree(self, selection=None, parent=None, op=""):
-        self.change_selection()
+
         if selection == None:
             selection = self.l1.focus()
 
@@ -472,8 +498,13 @@ class UIfunctions():
         if selection in self._filehandler.get_names():
             self.l1.selection_set(selection)
             self.l1.focus(selection)
+        self.change_selection()
 
         # self.l1.focus_set
+    def check_case(self, *args):
+        primcase = self._filehandler.find_primary_case()
+        self.case_selected.set(primcase)
+        print(f"case selected: {str(primcase)}")
 
     def change_selection(self, event=None):
         """
@@ -562,13 +593,6 @@ class UIfunctions():
         messagebox.showinfo("About OpenKeynote",
                             "OpenKeynote\n2019, Mathias Sønderskov Nielsen\n\
 For more info - www.github.com/sonderwoods")
-
-    # def copy_text(self, event=None):
-    #     print("x")
-    #     self.root.focus_get().event_generate("<<Copy>>")
-    #     cb = self.root.clipboard_get()
-    #     self.root.clipboard_clear()
-    #     self.root.clipboard_append(cb[:-2])
 
     def treeview_sort_column(self, tv, col, reverse):
         object = self.l1
