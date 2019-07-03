@@ -96,7 +96,10 @@ class FileHandler():
                 continue
             templist.append(
                 {"name": name, "content": content, "parent": parent})
-        templist = sorted(templist, key=lambda i: i['name'] in templist)
+        nameslist = [i['name'] for i in templist]
+        m, templist = (list(t)
+                       for t in zip(*sorted(zip(nameslist, templist))))
+
         self.itemlist = templist
         if skip_refresh == False:
             self.set_status(message=f"Successfully read {path}")
@@ -113,6 +116,9 @@ class FileHandler():
         #path = path / ".test"
         try:
             with open(path, 'w', newline='') as f:
+                nameslist = [i['name'].lower() for i in self.itemlist]
+                m, self.itemlist = (list(t)
+                                    for t in zip(*sorted(zip(nameslist, self.itemlist))))
                 for i, item in enumerate(self.itemlist):
                     if len(item["name"]) > 0:
                         f.write(item["name"] + "\t")

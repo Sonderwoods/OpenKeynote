@@ -77,7 +77,7 @@ class UserInterface(UIfunctions):
         """
         Tree view
         """
-        self.l1 = ttk.Treeview(self.frame_left, show="tree")
+        self.l1 = ttk.Treeview(self.frame_left, columns=["stuff"], show="tree")
         self.yscroll = Scrollbar(self.frame_left, orient=VERTICAL)
         self.yscroll.config(width=10)
         self.l1['yscrollcommand'] = self.yscroll.set

@@ -495,6 +495,10 @@ class UIfunctions():
         on_off_dict = self.get_on_off_dict()
 
         self.l1.delete(*self.l1.get_children())
+
+        nameslist = [i['name'] for i in itemlist]
+        m, itemlist = (list(t)
+                       for t in zip(*sorted(zip(nameslist, itemlist))))
         while len(itemlist) > 0:
             for i, item in enumerate(itemlist):
                 if item["name"] not in uniquenames:
@@ -544,6 +548,22 @@ class UIfunctions():
             self.l1.selection_set(selection)
             self.l1.focus(selection)
         self.change_selection(skip_refresh=True)
+        self.l1.heading("stuff", text="stuff",
+                        command=lambda c="stuff": treeview_sort_column(self.l1, c, False))
+
+    def treeview_sort_column(tv, col, reverse):
+        l = [(tv.set(k, col), k) for k in tv.get_children('')]
+        try:
+            l.sort(key=lambda t: int(t[0]), reverse=reverse)
+            #      ^^^^^^^^^^^^^^^^^^^^^^^
+        except ValueError:
+            l.sort(reverse=reverse)
+
+        for index, (val, k) in enumerate(l):
+            tv.move(k, '', index)
+
+        tv.heading(col, command=lambda: self.treeview_sort_column(
+            tv, col, not reverse))
 
         # self.l1.focus_set
     def check_case(self, *args):
