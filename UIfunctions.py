@@ -35,16 +35,19 @@ class UIfunctions():
         else:
             self.open_file(path=Path(path))
 
-    def open_file(self, path):
-        self._filehandler.set_status(f"Opening {path}")
+    def open_file(self, path, skip_refresh=False):
+
         self._filehandler.itemlist = []
         self.itemlist = []
         self._filehandler.path = path
-        self._filehandler.read_file(path=path)
+
         self.e1.delete("1.0", END)
-        self.e2.delete("1.0", END)
-        self.update_tree()
-        self.change_selection()
+        if skip_refresh == False:
+            self.e2.delete("1.0", END)
+            self._filehandler.set_status(f"Opening {path}")
+        self._filehandler.read_file(path=path, skip_refresh=skip_refresh)
+        self.update_tree(skip_refresh=True)
+        self.change_selection(skip_refresh=True)
         self.update_title(self._default_title + " - " + str(path))
         self.check_case()
 
@@ -137,6 +140,8 @@ class UIfunctions():
         self.nametext.bind(
             "<Tab>", lambda a: self.focus_on(target=self.contenttext))
         self.nametext.bind(
+            "<Return>", self.submit_item)
+        self.nametext.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=self.cattext))
         self.cattext.bind("<KeyRelease>", lambda e=None: validate_input(
             name=self.nametext.get("1.0", "end-1c"),
@@ -164,11 +169,13 @@ class UIfunctions():
         self.newframe.focus_force()
 
     def submit_item(self, event=None):
+        self.auto_load()
         name = self.nametext.get("1.0", "end-1c").strip()
         parent = self.cattext.get("1.0", "end-1c").strip()
         content = self.contenttext.get(
             "1.0", "end-1c").replace("\n\r", "\n").strip()
         self._filehandler.add_item(name, parent, content)
+        self.auto_save()
         self.update_tree(selection=name, parent=parent)
         self.newframe.destroy()
 
@@ -176,6 +183,8 @@ class UIfunctions():
         """
         copies text from e1 to e2
         """
+        self.auto_load()
+        print("autosave=1")
         itemlist = self._filehandler.itemlist
         self.e2.delete("1.0", END)
         self.e2.insert(END, self.e1.get("1.0", "end-1c"))
@@ -192,6 +201,14 @@ class UIfunctions():
                 name, parentname))
         else:
             self.tx2.config(text="Editing: {}".format(name))
+
+    def auto_load(self):
+        if self.autosave.get() == 1:
+            self.refresh_file
+
+    def auto_save(self):
+        if self.autosave.get() == 1:
+            self.save_file(path=self._filehandler.path)
 
     def saveitem(self, event=None):
         """
@@ -213,7 +230,7 @@ class UIfunctions():
             newcontent = str(newcontent).lower()
         if self.case_selected.get() == 3:
             newcontent = str(newcontent).title()
-
+        self.auto_load()
         for i, k in enumerate(self.itemlist):    # update Dictionary
             if k["name"] == self.editeditem:
                 self._filehandler.itemlist[i]["content"] = newcontent
@@ -221,6 +238,7 @@ class UIfunctions():
             self.e1.delete("1.0", END)
             #self.e1.insert(END, str(newcontent).upper())
             self.e1.insert(END, str(newcontent))
+        self.auto_save()
 
     def delete_item_dialog(self, event=None):
         def delete_it(*args):
@@ -244,12 +262,14 @@ class UIfunctions():
 
         rnframe.columnconfigure(1, weight=1)
         rnframe.rowconfigure(1, weight=1)
-        rnokbtn = ttk.Button(rnframe, text="Yes", width=10, underline=0)
-        rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
-        rnokbtn.config(command=delete_it)
         rncancelbtn = ttk.Button(rnframe, text="No",
-                                 command=rnframe.destroy, underline=0)
-        rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
+                                 command=rnframe.destroy, underline=0, width=8)
+        rncancelbtn.grid(row=4, column=1, sticky=N+W, padx=3, pady=10)
+        rnokbtn = ttk.Button(rnframe, text="Yes",
+                             width=8, underline=0)
+        rnokbtn.grid(row=4, column=0, sticky=N+W, padx=3, pady=10)
+        rnokbtn.config(command=delete_it)
+
         rnframe.bind("<Escape>", lambda e=None: rnframe.destroy())
         rnokbtn.focus()
         rnframe.bind("<y>", delete_it)
@@ -264,6 +284,7 @@ class UIfunctions():
         rnframe.focus_force()
 
     def delete_items(self, event=None, items=[], frame=None):
+        self.auto_load()
         for item in items:
             print(f"trying to delete {item}")
             if item in self._filehandler.get_names():
@@ -278,6 +299,7 @@ class UIfunctions():
             self._filehandler.set_status(f"Deleted {item}")
         if frame:
             frame.destroy()
+        self.auto_save()
 
     def rename_item_dialog(self, event=None):
         if len(self.l1.selection()) == 0:
@@ -344,7 +366,9 @@ class UIfunctions():
         if len(newname) == 0:
             return
         frame.destroy()
+        self.auto_load()
         self._filehandler.rename_item(oldname=oldname, newname=newname)
+        self.auto_save()
         self.update_tree(selection=newname)
 
     def change_parent_dialog(self, Event=None):
@@ -416,6 +440,7 @@ class UIfunctions():
         rnframe.focus_force()
 
     def change_parent_submit(self, event=None, frame=None, items=[], newparent=""):
+        self.auto_load()
         if newparent == "":
             for item in items:
                 self._filehandler.change_parent(
@@ -427,19 +452,13 @@ class UIfunctions():
             if item != newparent:
                 self._filehandler.change_parent(
                     item=item, newparent=newparent)
+        self.auto_save()
         self.update_tree(selection=items[0])
         frame.destroy()
 
-    def update_tree(self, selection=None, parent=None, op=""):
-
-        if selection == None:
-            selection = self.l1.focus()
-
-        self.itemlist = self._filehandler.itemlist  # gets from FileHandler
-        itemlist = self.itemlist[:]   # temp list that we can delete from
-        uniquenames = set()
-        on_off_dict = {}
+    def get_on_off_dict(self):
         previous_tree = self.get_all_children(self.l1)
+        on_off_dict = {}
         for item in previous_tree:
             name = self.l1.item(item)['text']
             open = self.l1.item(item)['open']
@@ -448,6 +467,32 @@ class UIfunctions():
             else:
                 open = False
             on_off_dict[name] = open
+        return on_off_dict
+
+    def refresh_file(self):
+        """
+        Reopens file but keeps selection etc.
+        """
+        on_off_dict = self.get_on_off_dict()
+        item = self.previeweditem
+        self.open_file(self._filehandler.path, skip_refresh=True)
+        self.update_tree(selection=item)
+
+        # print(on_off_dict)
+        for itemname in on_off_dict.keys():
+            if self.l1.item(itemname)['open'] == 1:
+                self.l1.item(itemname, open=1)
+                # print(self.l1.item(itemname))
+
+    def update_tree(self, selection=None, parent=None, op="", skip_refresh=False):
+
+        if selection == None:
+            selection = self.l1.focus()
+
+        self.itemlist = self._filehandler.itemlist  # gets from FileHandler
+        itemlist = self.itemlist[:]   # temp list that we can delete from
+        uniquenames = set()
+        on_off_dict = self.get_on_off_dict()
 
         self.l1.delete(*self.l1.get_children())
         while len(itemlist) > 0:
@@ -494,11 +539,11 @@ class UIfunctions():
                 self.l1.item(ap, open=True)
                 ts = ap
 
-        self.l1.selection_clear()
+        # self.l1.selection_clear()
         if selection in self._filehandler.get_names():
             self.l1.selection_set(selection)
             self.l1.focus(selection)
-        self.change_selection()
+        self.change_selection(skip_refresh=True)
 
         # self.l1.focus_set
     def check_case(self, *args):
@@ -506,7 +551,7 @@ class UIfunctions():
         self.case_selected.set(primcase)
         print(f"case selected: {str(primcase)}")
 
-    def change_selection(self, event=None):
+    def change_selection(self, event=None, skip_refresh=False):
         """
         what happens when changing selection in the treeview..
         """

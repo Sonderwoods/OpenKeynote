@@ -63,7 +63,7 @@ class FileHandler():
             except AttributeError:
                 print("AttributeError on backup")
 
-    def read_file(self, path=""):
+    def read_file(self, path="", skip_refresh=False):
         templist = []
         try:
             with open(path, "r", encoding="utf-16", newline="") as f:
@@ -98,7 +98,8 @@ class FileHandler():
                 {"name": name, "content": content, "parent": parent})
         templist = sorted(templist, key=lambda i: i['name'] in templist)
         self.itemlist = templist
-        self.set_status(message=f"Successfully read {path}")
+        if skip_refresh == False:
+            self.set_status(message=f"Successfully read {path}")
         self.set_paths_and_backup()
         self.path = path
         return True

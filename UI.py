@@ -11,7 +11,7 @@ import os
 # from tkinter import *
 from tkinter import (ttk, Tk, PanedWindow, filedialog, scrolledtext, messagebox,
                      BOTH, W, S, E, N, StringVar, IntVar, Button, Frame, Label,
-                     Text, Scrollbar, LabelFrame, DISABLED,
+                     Text, Scrollbar, LabelFrame, DISABLED, Checkbutton,
                      NORMAL, Menu, Radiobutton, HORIZONTAL, VERTICAL, END)
 
 
@@ -26,6 +26,7 @@ class UserInterface(UIfunctions):
         self.editeditem = ""
         self.case_selected = IntVar()
         self.parentname = ""
+        self.autosave = IntVar()
 
         self._default_title = self.title
         self.main_window()
@@ -100,7 +101,7 @@ class UserInterface(UIfunctions):
         for a, button_text in enumerate(middlebuttons):
             self.vbs.append(ttk.Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)
-            self.vbs[a].config(command=middlefunctions[a], width=20)
+            self.vbs[a].config(command=middlefunctions[a], width=10)
         for x in [2, 3, 4]:
             self.vbs[x].config(state=DISABLED)
         self.tx1 = Label(self.frame_right, text="Preview", anchor=W)
@@ -121,9 +122,19 @@ class UserInterface(UIfunctions):
                                             relief="solid", padx=10, pady=10,
                                             highlightthickness=0)
         self.e2.grid(row=3, column=0, columnspan=3, sticky=E+W+S+N)
-
-        self.labelsFrame = LabelFrame(self.frame_center, text=' Change case ')
+        # AUTOSAVE
+        self.autosaveFrame = LabelFrame(self.frame_center, text=' Autosave ')
+        self.autosaveFrame.pack(fill=BOTH)
+        self.autosave.trace(
+            'w', lambda *args: print(f"Autosave: {self.autosave.get()}"))
+        self.autosaveCheck = Checkbutton(
+            self.autosaveFrame, text="Enabled", variable=self.autosave, anchor=W)
+        self.autosaveCheck.select()
+        self.autosaveCheck.pack(fill=BOTH)
+        self.labelsFrame = LabelFrame(self.frame_center, text=' Change Case ')
         self.labelsFrame.pack(fill=BOTH)
+
+        # CASE BUTTONS
         self.case_radiobuttons = []
         self.case_selected.set(99)
         rbtns = ['No change', 'UPPERCASE', 'lowercase', 'First Letter']
@@ -131,7 +142,7 @@ class UserInterface(UIfunctions):
             self.case_radiobuttons.append(
                 Radiobutton(self.labelsFrame, text=button_text,
                             variable=self.case_selected,
-                            value=a, command=self.change_case, width=20, anchor=W))
+                            value=a, command=self.change_case, width=10, anchor=W))
             self.case_radiobuttons[a].grid(sticky="W", row=a)
 
     def change_case(self, *args):
