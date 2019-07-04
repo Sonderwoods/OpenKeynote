@@ -2,11 +2,11 @@
 An open source editor for Autodesk Revit(TM) keynote files.
 Not affiliated with Autodesk!
 
-## DISCLAIMER:
+### DISCLAIMER:
 This program is provided as is, and no warranty provided if it corrupts
 your keynote files. Always have a backup of the file you edit.
 
-## Status:
+### Status:
 It works and is sort of tested on Scandinavian text files, not on big scale though.
 
 ## DEMO (youtube)
