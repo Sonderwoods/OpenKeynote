@@ -9,6 +9,9 @@ your keynote files. Always have a backup of the file you edit.
 ## Status:
 It works and is sort of tested on Scandinavian text files, not on big scale though.
 
+## DEMO
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/IShaZq9zaHY/0.jpg)](https://www.youtube.com/watch?v=IShaZq9zaHY)
+
 ## TODO:
 - Compiled signed version, so people don't have problems on company computers (Help needed!)
 - Autosave option, so more people can work in the same txt file (DONE 2019-07-03 - not much tested!)
