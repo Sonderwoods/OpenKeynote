@@ -92,12 +92,15 @@ class UserInterface(UIfunctions):
     def frame_vertical_bar(self, *args):
         self.vbs = []
         middlebuttons = ("New Item", "New Subitem", "Delete",
-                         "Rename", "Change Parent")
+                         "Rename", "Change Parent","Save Keynote to DB")
         middlefunctions = (
             lambda: self.add_item(parent=self.parentname),
             lambda: self.add_item(parent=self.previeweditem),
             lambda: self.delete_item_dialog(),
-            self.rename_item_dialog, self.change_parent_dialog)
+            self.rename_item_dialog,
+            self.change_parent_dialog,
+            lambda: self.save_keynote_to_database(title="title",keynote="KN10", entreprise="min entreprise", category="")
+            )
         for a, button_text in enumerate(middlebuttons):
             self.vbs.append(ttk.Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)

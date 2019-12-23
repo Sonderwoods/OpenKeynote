@@ -2,10 +2,12 @@
 # encoding: utf-8
 
 # OpenKeynote
-# Copyright Mathias Sønderskov Nielsen 2019
+# Copyright Mathias Sønderskov Nielsen 2019-2020
 
 from shutil import copyfile
 from datetime import datetime
+import db_backend as db
+
 # from tkinter import *
 # from tkinter import ttk
 # from tkinter import filedialog

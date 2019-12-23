@@ -10,6 +10,7 @@ from tkinter import (ttk, Tk, filedialog, messagebox,
                      Text, Scrollbar, LabelFrame, Entry, DISABLED,
                      NORMAL, Menu, HORIZONTAL, VERTICAL, END)
 from pathlib import Path
+import db_backend as db
 
 
 class UIfunctions():
@@ -370,6 +371,15 @@ class UIfunctions():
         self._filehandler.rename_item(oldname=oldname, newname=newname)
         self.auto_save()
         self.update_tree(selection=newname)
+
+    def save_keynote_to_database(self, keynote="", title="", entreprise="", category=""):
+        db.insert(
+        title = title,
+        keynote = keynote,
+        entreprise = entreprise,
+        category = category
+        )
+
 
     def change_parent_dialog(self, Event=None):
         def validate_input(input="", btn=None):
