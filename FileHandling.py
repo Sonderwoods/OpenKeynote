@@ -6,7 +6,7 @@
 
 from shutil import copyfile
 from datetime import datetime
-import db_backend as db
+#import db_backend as db
 
 # from tkinter import *
 # from tkinter import ttk
