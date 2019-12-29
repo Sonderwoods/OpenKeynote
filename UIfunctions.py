@@ -380,6 +380,19 @@ class UIfunctions():
         category = category
         )
 
+    def save_all_keynotes_to_database(self):
+        print("test")
+        print(type(self._filehandler.itemlist))
+        print(len(self._filehandler.itemlist))
+        for entry in self._filehandler.itemlist:
+            print(entry)
+            """db.insert(
+            title = title,
+            keynote = keynote,
+            entreprise = entreprise,
+            category = category
+            )"""
+
 
     def change_parent_dialog(self, Event=None):
         def validate_input(input="", btn=None):

@@ -1,0 +1,18 @@
+<head></head>
+<body>
+    <h1>Interest Rate: {{ interest_rate * 100 }}%</h1>
+    <table>
+        <tr>
+            {% for column in df.columns %}
+            <th>{{ column }}</th>
+            {% endfor %}
+        </tr>
+        {% for idx, row in df.iterrows() %}
+        <tr>
+            {% for colname in df.columns %}
+            <td>${{ row[colname] | round(1) }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</body>

@@ -99,8 +99,10 @@ class UserInterface(UIfunctions):
             lambda: self.delete_item_dialog(),
             self.rename_item_dialog,
             self.change_parent_dialog,
-            lambda: self.save_keynote_to_database(title="title",keynote="KN10", entreprise="min entreprise", category="")
+            #lambda: self.save_keynote_to_database(title="title",keynote="KN10", entreprise="min entreprise", category="")
+            self.save_all_keynotes_to_database
             )
+
         for a, button_text in enumerate(middlebuttons):
             self.vbs.append(ttk.Button(self.frame_center, text=button_text))
             self.vbs[a].pack(fill=BOTH)

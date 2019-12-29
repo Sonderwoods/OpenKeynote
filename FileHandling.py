@@ -30,7 +30,7 @@ class FileHandler():
         self._folder = ""
         self._dict = {}
         self._prebackup = prebackup
-        self._status_standard = "Copyright Mathias Sønderskov Nielsen 2019"
+        self._status_standard = "Copyright Mathias Soenderskov Schaltz 2019-2020"
         self.statustext = self._status_standard
         self._statustimer = 0
         self._statuslist = []
