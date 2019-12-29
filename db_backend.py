@@ -86,17 +86,13 @@ def update(id,title,keynote,entreprise,category):
     conn.commit()
     conn.close()
 
-#connect()
-#insert("The Sun","John Smith",1918,913123132)
-#delete(3)
-#update(4,"The moon","John Smooth",1917,99999)
-#print(view())
-#print(search(author="John Smooth"))
-
 def start(): #to start from ironpython while debugging
     if __name__ == '__main__':
         from main import main
         main()
 
-if __name__ != '__main__':
+if __name__ == '__main__':
+    from main import main
+    main()
+else:
     connect()
