@@ -8,7 +8,7 @@ import os
 from tkinter import (ttk, Tk, filedialog, messagebox,
                      BOTH, W, S, E, N, StringVar, IntVar, Button, Frame, Label,
                      Text, Scrollbar, LabelFrame, Entry, DISABLED,
-                     NORMAL, Menu, HORIZONTAL, VERTICAL, END)
+                     NORMAL, Menu, HORIZONTAL, VERTICAL, END, LEFT, Y, X)
 from pathlib import Path
 import db_backend as db
 
@@ -506,6 +506,85 @@ class UIfunctions():
             if self.l1.item(itemname)['open'] == 1:
                 self.l1.item(itemname, open=1)
                 # print(self.l1.item(itemname))
+
+    ##
+    ## TEXT FORMATTING
+    ##
+    @staticmethod
+    def make_html(input):
+        html = markdown.markdown(input)
+        return html
+
+
+    def resfresh_dw(self, event=None):
+        return
+
+    def categories_window(self, event=None, category=None):
+        return
+
+    def description_window(self, event=None):
+
+        item = self.previeweditem
+
+
+
+        x = self.root.winfo_pointerx()
+        y = self.root.winfo_pointery()
+        absx = self.root.winfo_pointerx() - self.root.winfo_rootx()
+        absy = self.root.winfo_pointery() - self.root.winfo_rooty()
+
+
+        self.dw = Tk() #description window
+        self.dw.title(f"OpenKeyote - Descriptions overview")
+        self.dw.geometry(f"800x500+{x+50}+{y-20}")
+
+        self.dw_topframe = Frame(self.dw)
+        self.dw_topframe.config(height=150)
+        self.dw_topframe.grid(column=0, row=0, sticky=E+W)
+        self.dw.rowconfigure(1, weight=1)
+        self.dw.columnconfigure(0, weight=1)
+
+        self.dw_t1 = ttk.Treeview(self.dw, columns=["stuff"], show="tree")
+        self.dw_t1.grid(column=0, row=1, sticky=E+W+N+S)
+        self.dw_yscroll = Scrollbar(self.dw, orient=VERTICAL)
+        self.dw_yscroll.config(width=15)
+
+        self.dw_t1['yscrollcommand'] = self.dw_yscroll.set
+        self.dw_yscroll['command'] = self.dw_t1.yview
+        self.dw_t1.grid(row=1, column=0,  padx=5,
+                     pady=5, sticky=N+S+E+W)
+        self.dw_yscroll.grid(row=1, column=0, sticky=N+S+E)
+        #self.dw_t1.bind("<ButtonRelease-1>", myfunctions)
+
+        self.dw_vbs = []
+        buttons = ("Refresh", "Categories...", "Entreprises...")
+        functions = (
+            self.resfresh_dw,
+            lambda: self.categories_window(category="categories"),
+            lambda: self.categories_window(category="entreprises"),
+            )
+
+        for a, button_text in enumerate(buttons):
+            self.dw_vbs.append(ttk.Button(self.dw_topframe, text=button_text))
+            self.dw_vbs[a].pack(side=LEFT, fill=Y)
+            self.dw_vbs[a].config(command=functions[a], width=12)
+        #self.dw.columnconfigure(0, weight=1)
+        #self.dw.columnconfigure(1, weight=1)
+        """
+
+
+        rnname.bind("<KeyRelease>", lambda a: validate_input(
+            input=rnname.get(), btn=rnokbtn))
+        rnname.bind("<Tab>", lambda a: self.focus_on(target=rnokbtn))
+        rnname.bind("<Shift-Tab>", lambda a: self.focus_on(target=rncancelbtn))
+
+        rnokbtn.bind("<Tab>", lambda a: self.focus_on(target=rncancelbtn))
+        rnokbtn.bind("<Shift-Tab>", lambda a: self.focus_on(target=rnname))
+
+        rncancelbtn.bind("<Tab>", lambda a: self.focus_on(target=rnname))
+        rncancelbtn.bind(
+            "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
+        rnframe.focus_force()"""
 
     def update_tree(self, selection=None, parent=None, op="", skip_refresh=False):
 

@@ -59,7 +59,7 @@ def lookup_keynote(keynote="", entreprise="", category=""):
     conn.close()
     return rows
 
-def search(title="23r3f3",keynote="awdd3g",, short_description="awggr",
+def search(title="23r3f3",keynote="awdd3g", short_description="awggr",
 long_description="adwopdk", entreprise="a2d2ag",category="g4wgf3f"):
     conn=sqlite3.connect(DB_FILE)
     cur=conn.cursor()

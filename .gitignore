@@ -6,3 +6,7 @@ __pycache__
 /build/
 /output/
 *.bat
+.ipynb_checkpoints
+*.manifest
+*.spec
+test*
