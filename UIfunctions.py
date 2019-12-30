@@ -8,8 +8,10 @@ import os
 from tkinter import (ttk, Tk, filedialog, messagebox,
                      BOTH, W, S, E, N, StringVar, IntVar, Button, Frame, Label,
                      Text, Scrollbar, LabelFrame, Entry, DISABLED,
-                     NORMAL, Menu, HORIZONTAL, VERTICAL, END, LEFT, Y, X, YES)
+                     NORMAL, Menu, HORIZONTAL, VERTICAL, END, LEFT, Y, X, NO, YES)
+from tkinter.font import Font
 from pathlib import Path
+from multicolumn_Listbox import Multicolumn_Listbox
 
 
 class UIfunctions():
@@ -531,8 +533,7 @@ class UIfunctions():
     def description_window(self, event=None, database_rows=None):
 
         item = self.previeweditem
-        for row in database_rows:
-            print(row)
+
 
 
         x = self.root.winfo_pointerx()
@@ -542,30 +543,48 @@ class UIfunctions():
 
 
         self.dw = Tk() #description window
-        self.dw.title(f"OpenKeyote - Descriptions overview")
-        self.dw.geometry(f"800x500+{x+50}+{y-20}")
 
+
+        self.dw.title(f"OpenKeyote - Descriptions overview")
+        self.dw.geometry(f"1100x800+{200}+{200}")
+
+        style = ttk.Style(self.dw)
+        #font=Font(family='Arial', size=1)
+        style.configure('Descriptions.Treeview', rowheight=60)
         self.dw_topframe = Frame(self.dw)
         self.dw_topframe.config(height=150)
         self.dw_topframe.grid(column=0, row=0, sticky=E+W)
         self.dw.rowconfigure(1, weight=1)
         self.dw.columnconfigure(0, weight=1)
 
-        columns = ("Keynote", "Keynote Text", "Short Desc", "Long Desc", "Entreprise", "Category")
-        self.dw_t1 = ttk.Treeview(self.dw, columns=columns[1:])
-        for i, column in enumerate(columns):
-            id = "#"+ str(int(i))
-            self.dw_t1.heading(id, text = column)
-            self.dw_t1.column(id, width=50, stretch=YES)
+        def on_select(data):
+            print("called command when row is selected")
+            print(data)
+            print("\n")
 
-        self.dw_t1.grid(column=0, row=1, sticky=E+W+N+S)
+        columns = ("Keynote", "Keynote Text", "Short Desc", "Long Desc", "Entreprise", "Category")
+        #self.dw_t1 = ttk.Treeview(self.dw, columns=columns[1:], style='Descriptions.Treeview')
+        #table = Tk_Table(root, ["column one","column two", "column three"], row_numbers=True, stripped_rows = ("white","#f2f2f2"), select_mode="none")
+        self.dw_t1 = Multicolumn_Listbox(self.dw, columns, style='Descriptions.Treeview', command=on_select, cell_anchor="nw")
+
+        for i, row in enumerate(database_rows):
+            self.dw_t1.insert_row(row[1:])
+
+        # for i, column in enumerate(columns):
+        #     id = "#"+ str(int(i))
+        #     if i == 0:
+        #        self.dw_t1.column(id, width=100, stretch=NO)
+        #     else:
+        #        self.dw_t1.column(id, width=200, stretch=YES)
+
+        self.dw_t1.interior.grid(column=0, row=1, sticky=E+W+N+S)
         self.dw_yscroll = Scrollbar(self.dw, orient=VERTICAL)
         self.dw_yscroll.config(width=15)
-
-        self.dw_t1['yscrollcommand'] = self.dw_yscroll.set
-        self.dw_yscroll['command'] = self.dw_t1.yview
-        self.dw_t1.grid(row=1, column=0,  padx=5,
-                     pady=5, sticky=N+S+E+W)
+        #
+        self.dw_t1.interior['yscrollcommand'] = self.dw_yscroll.set
+        self.dw_yscroll['command'] = self.dw_t1.interior.yview
+        # self.dw_t1.interior.grid(row=1, column=0,  padx=5,
+        #             pady=5, sticky=N+S+E+W)
         self.dw_yscroll.grid(row=1, column=0, sticky=N+S+E)
         #self.dw_t1.bind("<ButtonRelease-1>", myfunctions)
 

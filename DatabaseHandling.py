@@ -43,7 +43,7 @@ class DatabaseHandler():
                     print(f"added {title} to the database")
                 else:
                     self.update_title_keynote(title, keynote)
-                    print(f"updated {title} in the database")
+        print("updated in the database..")
 
 
     def insert(self, title="", keynote="", long_description="", \
