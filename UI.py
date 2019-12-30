@@ -16,9 +16,10 @@ from tkinter import (ttk, Tk, PanedWindow, filedialog, scrolledtext, messagebox,
 
 
 class UserInterface(UIfunctions):
-    def __init__(self, filehandler, path=None):
+    def __init__(self, filehandler, databasehandler, path=None):
         self.title = "OpenKeynote (BETA)"
         self._filehandler = filehandler
+        self._databasehandler = databasehandler
         self.path = path
         self.itemlist = []
         self.root = Tk()
@@ -99,7 +100,7 @@ class UserInterface(UIfunctions):
             lambda: self.delete_item_dialog(),
             self.rename_item_dialog,
             self.change_parent_dialog,
-            self.description_window
+            lambda: self.description_window(database_rows=self._databasehandler.view())
             #lambda: self.save_keynote_to_database(title="title",keynote="KN10", entreprise="min entreprise", category="")
             #self.save_all_keynotes_to_database
             )

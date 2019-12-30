@@ -8,9 +8,8 @@ import os
 from tkinter import (ttk, Tk, filedialog, messagebox,
                      BOTH, W, S, E, N, StringVar, IntVar, Button, Frame, Label,
                      Text, Scrollbar, LabelFrame, Entry, DISABLED,
-                     NORMAL, Menu, HORIZONTAL, VERTICAL, END, LEFT, Y, X)
+                     NORMAL, Menu, HORIZONTAL, VERTICAL, END, LEFT, Y, X, YES)
 from pathlib import Path
-import db_backend as db
 
 
 class UIfunctions():
@@ -20,10 +19,13 @@ class UIfunctions():
 
     def __str__(self):
         text = ["First five lines:"]
-        for i in self.itemlist[0:5]:
-            text.append(f"name: {i['name']}, \tcontent: {i['content']}, \
-                \tparent: {i['parent']}")
-        return "\n".join(text)
+        try:
+            for i in self.itemlist[0:5]:
+                text.append(f"name: {i['name']}, \tcontent: {i['content']}, \
+                    \tparent: {i['parent']}")
+            return "\n".join(text)
+        except:
+            return "empty"
 
     def open_file_dialog(self, event=None):
         path = filedialog.askopenfilename(
@@ -47,6 +49,9 @@ class UIfunctions():
             self.e2.delete("1.0", END)
             self._filehandler.set_status(f"Opening {path}")
         self._filehandler.read_file(path=path, skip_refresh=skip_refresh)
+        print(f"path = {path.parent} ... fname = {path.stem}")
+        dbpath = path.parent.joinpath(f"{path.stem}.db")
+        self._databasehandler.connect(path=dbpath, current_itemlist=self._filehandler.itemlist)
         self.update_tree(skip_refresh=True)
         self.change_selection(skip_refresh=True)
         self.update_title(self._default_title + " - " + str(path))
@@ -369,6 +374,7 @@ class UIfunctions():
         frame.destroy()
         self.auto_load()
         self._filehandler.rename_item(oldname=oldname, newname=newname)
+        self._databasehandler.rename_item(oldname=oldname, newname=newname)
         self.auto_save()
         self.update_tree(selection=newname)
 
@@ -522,10 +528,11 @@ class UIfunctions():
     def categories_window(self, event=None, category=None):
         return
 
-    def description_window(self, event=None):
+    def description_window(self, event=None, database_rows=None):
 
         item = self.previeweditem
-
+        for row in database_rows:
+            print(row)
 
 
         x = self.root.winfo_pointerx()
@@ -544,7 +551,13 @@ class UIfunctions():
         self.dw.rowconfigure(1, weight=1)
         self.dw.columnconfigure(0, weight=1)
 
-        self.dw_t1 = ttk.Treeview(self.dw, columns=["stuff"], show="tree")
+        columns = ("Keynote", "Keynote Text", "Short Desc", "Long Desc", "Entreprise", "Category")
+        self.dw_t1 = ttk.Treeview(self.dw, columns=columns[1:])
+        for i, column in enumerate(columns):
+            id = "#"+ str(int(i))
+            self.dw_t1.heading(id, text = column)
+            self.dw_t1.column(id, width=50, stretch=YES)
+
         self.dw_t1.grid(column=0, row=1, sticky=E+W+N+S)
         self.dw_yscroll = Scrollbar(self.dw, orient=VERTICAL)
         self.dw_yscroll.config(width=15)

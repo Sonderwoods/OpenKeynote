@@ -6,7 +6,6 @@
 
 from shutil import copyfile
 from datetime import datetime
-#import db_backend as db
 
 # from tkinter import *
 # from tkinter import ttk
@@ -34,8 +33,19 @@ class FileHandler():
         self.statustext = self._status_standard
         self._statustimer = 0
         self._statuslist = []
+        print(f"initiated FileHandler at path = {self.path}")
 
         self.set_paths_and_backup()
+
+    def __str__(self):
+        text = ["First five lines:"]
+        try:
+            for i in self.itemlist[0:5]:
+                text.append(f"name: {i['name']}, \tcontent: {i['content']}, \
+                    \tparent: {i['parent']}")
+            return "\n".join(text)
+        except:
+            return "empty"
 
     def set_paths_and_backup(self):
         if self.path != None:
@@ -44,26 +54,26 @@ class FileHandler():
             self._filename = self.path.name
             self._bkfolder = self._folder / "BACKUP_OpenKeynote"
 
-        if self._prebackup == True and self.path != None:
-            try:
-                self.status = f"Trying to backup to {self._bkfolder}"
-                """
-                Backups your file into a backupfolder
-                """
-                mytime = datetime.now().strftime("%Y%m%d_%H%M%S")
+            if self._prebackup == True:
                 try:
-                    os.mkdir(self._bkfolder)
-                except OSError:
-                    pass  # folder already exists
-                try:
-                    targetfile = self._bkfolder / \
-                        (self.path.stem + "_" + mytime + ".txt")
-                    copyfile(self.path, targetfile)
-                    print(f"successfully backuped {targetfile}")
-                except FileNotFoundError as e:
-                    print(f"Error: Can't create backup!! ( {e} )")
-            except AttributeError:
-                print("AttributeError on backup")
+                    self.status = f"Trying to backup to {self._bkfolder}"
+                    """
+                    Backups your file into a backupfolder
+                    """
+                    mytime = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    try:
+                        os.mkdir(self._bkfolder)
+                    except OSError:
+                        pass  # folder already exists
+                    try:
+                        targetfile = self._bkfolder / \
+                            (self.path.stem + "_" + mytime + ".txt")
+                        copyfile(self.path, targetfile)
+                        print(f"successfully backuped {targetfile}")
+                    except FileNotFoundError as e:
+                        print(f"Error: Can't create backup!! ( {e} )")
+                except AttributeError:
+                    print("AttributeError on backup")
 
     def read_file(self, path="", skip_refresh=False):
         templist = []
