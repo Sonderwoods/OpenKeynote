@@ -530,6 +530,32 @@ class UIfunctions():
     def categories_window(self, event=None, category=None):
         return
 
+    def dw_selectItem(self, event):
+
+        curItem = self.dw_t1.interior.item(self.dw_t1.interior.focus())
+        col = self.dw_t1.interior.identify_column(event.x)
+        #print ('curItem = ', curItem)
+        print ('col = ', col)
+
+        columns = self.dw_columns
+
+        if col == '#0':
+            cell_value = curItem['values'][0]
+        else:
+            for i, column in enumerate(self.dw_columns):
+                result = '#' + str(int(i))
+                if col == result:
+                    cell_value = curItem['values'][i-1][0:40]
+        print ('cell_value = ', cell_value)
+        print(f"")
+        # elif col == '#1':
+        #     cell_value = curItem['values'][0]
+        # elif col == '#2':
+        #     cell_value = curItem['values'][1]
+        # elif col == '#3':
+        #     cell_value = curItem['values'][2]
+        # print ('cell_value = ', cell_value)
+
     def description_window(self, event=None, database_rows=None):
 
         item = self.previeweditem
@@ -550,7 +576,7 @@ class UIfunctions():
 
         style = ttk.Style(self.dw)
         #font=Font(family='Arial', size=1)
-        style.configure('Descriptions.Treeview', rowheight=60)
+        style.configure('Descriptions.Treeview', rowheight=80)
         self.dw_topframe = Frame(self.dw)
         self.dw_topframe.config(height=150)
         self.dw_topframe.grid(column=0, row=0, sticky=E+W)
@@ -558,15 +584,16 @@ class UIfunctions():
         self.dw.columnconfigure(0, weight=1)
 
         def on_select(data):
-            print("called command when row is selected")
-            print(data)
-            print("\n")
+            # print("called command when row is selected")
+            # print(data)
+            # print("\n")
+            pass
 
-        columns = ("Keynote", "Keynote Text", "Short Desc", "Long Desc", "Entreprise", "Category")
+        self.dw_columns = ("Keynote", "Keynote Text", "Short Desc", "Long Desc", "Entreprise", "Category")
         #self.dw_t1 = ttk.Treeview(self.dw, columns=columns[1:], style='Descriptions.Treeview')
         #table = Tk_Table(root, ["column one","column two", "column three"], row_numbers=True, stripped_rows = ("white","#f2f2f2"), select_mode="none")
-        self.dw_t1 = Multicolumn_Listbox(self.dw, columns, style='Descriptions.Treeview', command=on_select, cell_anchor="nw")
-
+        self.dw_t1 = Multicolumn_Listbox(self.dw, self.dw_columns, style='Descriptions.Treeview', command=on_select, cell_anchor="nw")
+        self.dw_t1.bind('<ButtonRelease-1>', self.dw_selectItem)
         for i, row in enumerate(database_rows):
             self.dw_t1.insert_row(row[1:])
 
