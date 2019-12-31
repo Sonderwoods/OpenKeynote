@@ -18,7 +18,6 @@ class UIfunctions():
     """
     Handles all the UI functions. called by UI.py
     """
-
     def __str__(self):
         text = ["First five lines:"]
         try:
@@ -45,7 +44,6 @@ class UIfunctions():
         self._filehandler.itemlist = []
         self.itemlist = []
         self._filehandler.path = path
-
         self.e1.delete("1.0", END)
         if skip_refresh == False:
             self.e2.delete("1.0", END)
@@ -115,10 +113,6 @@ class UIfunctions():
         self.cattext = Text(self.newframe, font=("Courier", 13),
                             padx=10, pady=10, highlightthickness=1,
                             borderwidth=1, relief="solid", height=1)
-
-        # self.cattext = Entry(self.newframe, font=("Courier", 13),
-        #                      highlightthickness=1,
-        #                      borderwidth=1, relief="solid")
         self.cattext.grid(row=1, column=1, sticky=E+W)
         self.nametext = Text(self.newframe, font=("Courier", 13),
                              padx=10, pady=10, highlightthickness=1,
@@ -139,7 +133,6 @@ class UIfunctions():
         self.cancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
         self.newframe.bind("<Escape>", lambda a: self.newframe.destroy())
         self.nametext.focus()
-
         # Tried this using lists without luck.
         self.nametext.bind("<KeyRelease>", lambda a: validate_input(
             name=self.nametext.get("1.0", "end-1c"),
@@ -159,17 +152,14 @@ class UIfunctions():
             "<Tab>", lambda a: self.focus_on(target=self.nametext))
         self.cattext.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=self.cancelbtn))
-
         self.contenttext.bind(
             "<Tab>", lambda a: self.focus_on(target=self.okbtn))
         self.contenttext.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=self.nametext))
-
         self.okbtn.bind("<Tab>", lambda a: self.focus_on(
             target=self.cancelbtn))
         self.okbtn.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=self.contenttext))
-
         self.cancelbtn.bind(
             "<Tab>", lambda a: self.focus_on(target=self.cattext))
         self.cancelbtn.bind(
@@ -251,13 +241,11 @@ class UIfunctions():
     def delete_item_dialog(self, event=None):
         def delete_it(*args):
             self.delete_items(items=items, frame=rnframe)
-
         items = self.l1.selection()
         if len(items) > 1:
             item = ", ".join(items)[0:20]
         else:
             item = items[0]
-        #item = self.previeweditem
         x = self.root.winfo_pointerx()
         y = self.root.winfo_pointery()
         absx = self.root.winfo_pointerx() - self.root.winfo_rootx()
@@ -267,7 +255,6 @@ class UIfunctions():
         rnframe.geometry(f"500x100+{x+50}+{y-20}")
         namelabel = Label(rnframe, text=f"Deleting {item}. Are you sure?")
         namelabel.grid(row=2, column=0, padx=10, pady=10)
-
         rnframe.columnconfigure(1, weight=1)
         rnframe.rowconfigure(1, weight=1)
         rncancelbtn = ttk.Button(rnframe, text="No",
@@ -277,7 +264,6 @@ class UIfunctions():
                              width=8, underline=0)
         rnokbtn.grid(row=4, column=0, sticky=N+W, padx=3, pady=10)
         rnokbtn.config(command=delete_it)
-
         rnframe.bind("<Escape>", lambda e=None: rnframe.destroy())
         rnokbtn.focus()
         rnframe.bind("<y>", delete_it)
@@ -320,7 +306,6 @@ class UIfunctions():
             else:
                 rnokbtn.config(state=NORMAL)
                 return True
-
         item = self.previeweditem
         x = self.root.winfo_pointerx()
         y = self.root.winfo_pointery()
@@ -335,36 +320,26 @@ class UIfunctions():
                        highlightthickness=1,
                        borderwidth=1, relief="solid")
         rnname.grid(row=2, column=1, sticky=E+W, padx=10, pady=10)
-
         rnframe.columnconfigure(1, weight=1)
         rnframe.rowconfigure(1, weight=1)
         rnokbtn = ttk.Button(rnframe, text="OK", width=10, state=DISABLED)
         rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
         rnokbtn.config(command=lambda: self.rename_item(
-            frame=rnframe,
-            oldname=item,
-            newname=rnname.get()
-        ))
+            frame=rnframe, oldname=item, newname=rnname.get()))
         rncancelbtn = ttk.Button(rnframe, text="Cancel",
                                  command=rnframe.destroy)
         rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
         rnframe.bind("<Escape>", lambda e=None: rnframe.destroy())
         rnframe.bind("<Return>", lambda e=None: self.rename_item(
-            frame=rnframe,
-            oldname=item,
-            newname=rnname.get()
-        ))
+            frame=rnframe, oldname=item, newname=rnname.get()))
         rnname.focus()
-
         # Tried this using lists without luck.
         rnname.bind("<KeyRelease>", lambda a: validate_input(
             input=rnname.get(), btn=rnokbtn))
         rnname.bind("<Tab>", lambda a: self.focus_on(target=rnokbtn))
         rnname.bind("<Shift-Tab>", lambda a: self.focus_on(target=rncancelbtn))
-
         rnokbtn.bind("<Tab>", lambda a: self.focus_on(target=rncancelbtn))
         rnokbtn.bind("<Shift-Tab>", lambda a: self.focus_on(target=rnname))
-
         rncancelbtn.bind("<Tab>", lambda a: self.focus_on(target=rnname))
         rncancelbtn.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
@@ -401,7 +376,6 @@ class UIfunctions():
             category = category
             )"""
 
-
     def change_parent_dialog(self, Event=None):
         def validate_input(input="", btn=None):
             if input in self._filehandler.get_names():
@@ -426,12 +400,7 @@ class UIfunctions():
         rnname = Entry(rnframe, font=("Courier", 13),
                        highlightthickness=1,
                        borderwidth=1, relief="solid")
-        # rnname = Entry(rnframe, font=("Courier", 13),
-        #               highlightthickness=1,
-        #               borderwidth=1, relief="solid",
-        #               textvariable = self.rnvar)
         rnname.grid(row=2, column=1, sticky=E+W, padx=10, pady=10)
-
         rnframe.columnconfigure(1, weight=1)
         rnframe.rowconfigure(1, weight=1)
         rnokbtn = ttk.Button(rnframe, text="OK", width=10)
@@ -442,10 +411,7 @@ class UIfunctions():
             item = self.previeweditem
         rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
         rnokbtn.config(command=lambda: self.change_parent_submit(
-            frame=rnframe,
-            items=items,
-            newparent=rnname.get()
-        ))
+            frame=rnframe, items=items, newparent=rnname.get()))
         rncancelbtn = ttk.Button(rnframe, text="Cancel",
                                  command=rnframe.destroy)
         rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
@@ -508,12 +474,9 @@ class UIfunctions():
         item = self.previeweditem
         self.open_file(self._filehandler.path, skip_refresh=True)
         self.update_tree(selection=item)
-
-        # print(on_off_dict)
         for itemname in on_off_dict.keys():
             if self.l1.item(itemname)['open'] == 1:
                 self.l1.item(itemname, open=1)
-                # print(self.l1.item(itemname))
 
     ##
     ## TEXT FORMATTING
@@ -531,23 +494,26 @@ class UIfunctions():
         return
 
     def dw_selectItem(self, event):
-
+        """
+        what happens when click an item in the table
+        """
         curItem = self.dw_t1.interior.item(self.dw_t1.interior.focus())
+        title = curItem['values'][0]
         col = self.dw_t1.interior.identify_column(event.x)
+        col = int(col.replace('#',''))-1
         #print ('curItem = ', curItem)
-        print ('col = ', col)
+
 
         columns = self.dw_columns
-
-        if col == '#0':
-            cell_value = curItem['values'][0]
+        cell_value = ""
+        if col == 0:
+            cell_value = title
         else:
             for i, column in enumerate(self.dw_columns):
-                result = '#' + str(int(i))
-                if col == result:
-                    cell_value = curItem['values'][i-1][0:40]
-        print ('cell_value = ', cell_value)
-        print(f"")
+                if col == i:
+                    cell_value = curItem['values'][i][0:40]
+        print (f"\nColumn {col}: '{self.dw_columns[col]}' - {title}")
+        print(f"--\n{cell_value[0:20]}\n--")
         # elif col == '#1':
         #     cell_value = curItem['values'][0]
         # elif col == '#2':
