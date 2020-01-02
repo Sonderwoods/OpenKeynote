@@ -10,3 +10,5 @@ __pycache__
 *.manifest
 *.spec
 test*
+*.log
+*error*

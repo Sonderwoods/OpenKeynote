@@ -12,6 +12,12 @@ from tkinter import (ttk, Tk, filedialog, messagebox,
 from tkinter.font import Font
 from pathlib import Path
 from multicolumn_Listbox import Multicolumn_Listbox
+from markdown import markdown
+import pdfkit
+import tempfile
+from cefpython_openkeynote import MainFrame
+
+
 
 
 class UIfunctions():
@@ -479,10 +485,7 @@ class UIfunctions():
     ##
     ## TEXT FORMATTING
     ##
-    @staticmethod
-    def make_html(input):
-        html = markdown.markdown(input)
-        return html
+
 
 
     def resfresh_dw(self, event=None):
@@ -579,25 +582,15 @@ class UIfunctions():
                 width=70
                 minwidth=70
                 stretch=False
-                #  ("width", "anchor", "stretch", "minwidth"):
             else:
                 width=Font().measure(col)
                 stretch=True
                 minwidth=170
             self.dw_t1.interior.column(i, width=width, minwidth=minwidth, stretch=stretch)
-            #self.dw_t1.configure_column(i, )
-            print("set column %s %s width %s" % (i,col,width))
         self.dw_t1.bind('<ButtonRelease-1>', self.dw_selectItem)
-        self.dw_t1.bind('<ButtonRelease-1>', self.dw_edit_item_dialog)
+        self.dw_t1.bind('<ButtonRelease-3>', self.dw_edit_item_dialog)
         for i, row in enumerate(database_rows):
             self.dw_t1.insert_row(row[1:])
-
-        # for i, column in enumerate(columns):
-        #     id = "#"+ str(int(i))
-        #     if i == 0:
-        #        self.dw_t1.column(id, width=100, stretch=NO)
-        #     else:
-        #        self.dw_t1.column(id, width=200, stretch=YES)
 
         self.dw_t1.interior.grid(column=0, row=1, sticky=E+W+N+S)
         self.dw_yscroll = Scrollbar(self.dw, orient=VERTICAL)
@@ -650,40 +643,67 @@ class UIfunctions():
             col = 0
         self._dw_t1_column = col
         self._dw_t1_rows = [item[0] for item in curItems]
+        selected_column = self.dw_columns[col]
         #cols = Multicolumn_Listbox.List_Of_Columns(self.dw_t1)
         #print(cols)
 
-        item = ''.join(self._dw_t1_rows)
+        item = "[" + ', '.join(self._dw_t1_rows) + "]"
         print("column")
         print(self._dw_t1_column)
         print("rows:")
         print(self._dw_t1_rows)
 
-        def validate_input(input="", btn=None):
-            if input in self._filehandler.get_names() or len(input) == 0:
-                rnokbtn.config(state=DISABLED)
-                return False
-            else:
-                rnokbtn.config(state=NORMAL)
-                return True
+        def update_html(input="", btn=None):
+            if self._html_path == None:
+                fd, self._html_path = tempfile.mkstemp(suffix=".html")
+            html_text = markdown(input).replace("\n","<br>")
 
-        #item = self.previeweditem
+            html_file = open(self._html_path, 'w')
+            html_file.write(html_text)
+            html_file.close()
+            print(self._html_path)
+
+
+
+
+            #other stuff
+            # path = "c:/temp/out.pdf"
+            # basedir = os.path.dirname(path)
+            # if not os.path.exists(basedir):
+            #     os.makedirs(basedir)
+            #     with open(path, 'a'):
+            #         os.utime(path, None)
+            ## Function to save final PDF.. Works
+
+            try:
+                pdf_file = open('lol2.pdf', 'w')
+                pdf_file.write("")
+                pdf_file.close()
+
+                pdf_path = str(Path("lol2.pdf"))
+            except:
+                print("pdf file locked - is it open?")
+            os.chmod(pdf_path, 0o777)
+            config = pdfkit.configuration(wkhtmltopdf="C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe")
+            #pdfkit.from_file('pdf_test.html','c:\\pdf_test.pdf', configuration=config)
+            #pdfkit.from_string(html_text, path, configuration=config)
+            pdfkit.from_string(html_text, pdf_path, configuration=config)
+            #except OSError:
+            #    print("Error - install wkhtmltopdf")
+            print("printed html")
         x = self.dw.winfo_pointerx()
         y = self.dw.winfo_pointery()
         absx = self.dw.winfo_pointerx() - self.dw.winfo_rootx()
         absy = self.dw.winfo_pointery() - self.dw.winfo_rooty()
         rnframe = Tk()
-        rnframe.title(f"OpenKeyote - Editing {item}")
-        rnframe.geometry(f"400x100+{x+50}+{y-20}")
-        namelabel = Label(rnframe, text=f"Renaming {item} to:")
-        namelabel.grid(row=2, column=0, padx=10, pady=10)
-        #rnname = Entry(rnframe, font=("Courier", 13),
-        #               highlightthickness=1,
-        #               borderwidth=1, relief="solid")
+        rnframe.title(f"OpenKeyote - Editing {selected_column}")
+        rnframe.geometry(f"400x400+{900}+{500}")
+        namelabel = Label(rnframe, text=f"Editing {selected_column} for {item}:")
+        namelabel.grid(row=0, column=0, padx=10, pady=10)
         rnname = Text(rnframe, font=("Courier", 13),
                             padx=10, pady=10, highlightthickness=1,
-                            borderwidth=1, relief="solid", height=1)
-        rnname.grid(row=2, column=1, sticky=E+W, padx=10, pady=10)
+                            borderwidth=1, relief="solid", height=10)
+        rnname.grid(row=1, column=0, sticky=E+W, padx=10, pady=10)
         rnframe.columnconfigure(1, weight=1)
         rnframe.rowconfigure(1, weight=1)
         rnokbtn = ttk.Button(rnframe, text="OK", width=10, state=DISABLED)
@@ -694,12 +714,10 @@ class UIfunctions():
                                  command=rnframe.destroy)
         rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
         rnframe.bind("<Escape>", lambda e=None: rnframe.destroy())
-        rnframe.bind("<Return>", lambda e=None: self.dw_save_item(
-            frame=rnframe, oldname=item, newname=rnname.get()))
+        #rnframe.bind("<Return>", lambda e=None: self.dw_save_item(
+        #    frame=rnframe, oldname=item, newname=rnname.get()))
         rnname.focus()
-        # Tried this using lists without luck.
-        rnname.bind("<KeyRelease>", lambda a: validate_input(
-            input=rnname.get(), btn=rnokbtn))
+        rnname.bind("<KeyRelease>", lambda e=None: update_html(rnname.get("1.0", "end-1c"), btn=rnokbtn))
         rnname.bind("<Tab>", lambda a: self.focus_on(target=rnokbtn))
         rnname.bind("<Shift-Tab>", lambda a: self.focus_on(target=rncancelbtn))
         rnokbtn.bind("<Tab>", lambda a: self.focus_on(target=rncancelbtn))

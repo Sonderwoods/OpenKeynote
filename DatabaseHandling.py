@@ -30,7 +30,6 @@ class DatabaseHandler():
         short_description TEXT, entreprise STRING, category STRING)")
         conn.commit()
         conn.close()
-
         self.update_database(current_itemlist)
 
     def update_database(self, itemlist):

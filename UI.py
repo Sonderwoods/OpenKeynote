@@ -28,6 +28,7 @@ class UserInterface(UIfunctions):
         self.case_selected = IntVar()
         self.parentname = ""
         self.autosave = IntVar()
+        self._html_path = None
 
         self._default_title = self.title
         self.main_window()
@@ -338,3 +339,8 @@ class UserInterface(UIfunctions):
 if __name__ == '__main__':
     from main import main
     main()
+    try:
+        self.open_file(path=r"C:\Users\mani\Documents\Py\OpenKeynote\Keynotes.txt")
+        #self.description_window(database_rows=self._databasehandler.view())
+    except:
+        pass
