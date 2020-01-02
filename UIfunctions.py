@@ -199,6 +199,7 @@ class UIfunctions():
                 name, parentname))
         else:
             self.tx2.config(text="Editing: {}".format(name))
+        self.auto_save() # BUG DOES IT WORK?
 
     def auto_load(self):
         if self.autosave.get() == 1:
@@ -419,7 +420,6 @@ class UIfunctions():
         rnname.focus()
         rnname.bind("<KeyRelease>", lambda a: validate_input(
             input=rnname.get(), btn=rnokbtn))
-
         rnname.bind("<Tab>", lambda a: self.focus_on(target=rnokbtn))
         rnname.bind("<Shift-Tab>", lambda a: self.focus_on(target=rncancelbtn))
         rnname.bind("<Return>", lambda a: self.change_parent_submit(
@@ -430,10 +430,8 @@ class UIfunctions():
 
         rnokbtn.bind("<Tab>", lambda a: self.focus_on(target=rncancelbtn))
         rnokbtn.bind("<Shift-Tab>", lambda a: self.focus_on(target=rnname))
-
         rncancelbtn.bind("<Tab>", lambda a: self.focus_on(target=rnname))
-        rncancelbtn.bind(
-            "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
+        rncancelbtn.bind("<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
         rnframe.focus_force()
 
     def change_parent_submit(self, event=None, frame=None, items=[], newparent=""):
@@ -498,9 +496,27 @@ class UIfunctions():
         what happens when click an item in the table
         """
         curItem = self.dw_t1.interior.item(self.dw_t1.interior.focus())
+        curItems = self.dw_t1.selected_rows
+        ids = []
+        self._dw_t1_rows = [item[0] for item in curItems]
+
+        for item in curItems:
+            print(item[0])
+            #ids.append(item['values'][0])
+        ids = ",".join(ids)
+        ids = "IDS: %s" % ids
+        print(ids)
+        #print("\n".join([str(self.dw_t1.interior.item(i)['values']) for i in curItems]))
+        #print(curItem)
         title = curItem['values'][0]
         col = self.dw_t1.interior.identify_column(event.x)
-        col = int(col.replace('#',''))-1
+        cols = Multicolumn_Listbox.List_Of_Columns(self.dw_t1)
+        print(cols)
+        try:
+            col = int(col.replace('#',''))-1
+        except:
+            col = 0
+        self._dw_t1_column = col
         #print ('curItem = ', curItem)
 
 
@@ -514,6 +530,7 @@ class UIfunctions():
                     cell_value = curItem['values'][i][0:40]
         print (f"\nColumn {col}: '{self.dw_columns[col]}' - {title}")
         print(f"--\n{cell_value[0:20]}\n--")
+
         # elif col == '#1':
         #     cell_value = curItem['values'][0]
         # elif col == '#2':
@@ -526,19 +543,15 @@ class UIfunctions():
 
         item = self.previeweditem
 
-
-
         x = self.root.winfo_pointerx()
         y = self.root.winfo_pointery()
         absx = self.root.winfo_pointerx() - self.root.winfo_rootx()
         absy = self.root.winfo_pointery() - self.root.winfo_rooty()
 
-
         self.dw = Tk() #description window
 
-
         self.dw.title(f"OpenKeyote - Descriptions overview")
-        self.dw.geometry(f"1100x800+{200}+{200}")
+        self.dw.geometry(f"1300x800+{200}+{200}")
 
         style = ttk.Style(self.dw)
         #font=Font(family='Arial', size=1)
@@ -559,7 +572,23 @@ class UIfunctions():
         #self.dw_t1 = ttk.Treeview(self.dw, columns=columns[1:], style='Descriptions.Treeview')
         #table = Tk_Table(root, ["column one","column two", "column three"], row_numbers=True, stripped_rows = ("white","#f2f2f2"), select_mode="none")
         self.dw_t1 = Multicolumn_Listbox(self.dw, self.dw_columns, style='Descriptions.Treeview', command=on_select, cell_anchor="nw")
+
+        print(self.dw_t1._columns)
+        for i, col in enumerate(self.dw_columns):
+            if i == 0:
+                width=70
+                minwidth=70
+                stretch=False
+                #  ("width", "anchor", "stretch", "minwidth"):
+            else:
+                width=Font().measure(col)
+                stretch=True
+                minwidth=170
+            self.dw_t1.interior.column(i, width=width, minwidth=minwidth, stretch=stretch)
+            #self.dw_t1.configure_column(i, )
+            print("set column %s %s width %s" % (i,col,width))
         self.dw_t1.bind('<ButtonRelease-1>', self.dw_selectItem)
+        self.dw_t1.bind('<ButtonRelease-1>', self.dw_edit_item_dialog)
         for i, row in enumerate(database_rows):
             self.dw_t1.insert_row(row[1:])
 
@@ -610,6 +639,85 @@ class UIfunctions():
         rncancelbtn.bind(
             "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
         rnframe.focus_force()"""
+
+    def dw_edit_item_dialog(self, event=None):
+
+        curItems = self.dw_t1.selected_rows
+        col = self.dw_t1.interior.identify_column(event.x)
+        try:
+            col = int(col.replace('#',''))-1
+        except:
+            col = 0
+        self._dw_t1_column = col
+        self._dw_t1_rows = [item[0] for item in curItems]
+        #cols = Multicolumn_Listbox.List_Of_Columns(self.dw_t1)
+        #print(cols)
+
+        item = ''.join(self._dw_t1_rows)
+        print("column")
+        print(self._dw_t1_column)
+        print("rows:")
+        print(self._dw_t1_rows)
+
+        def validate_input(input="", btn=None):
+            if input in self._filehandler.get_names() or len(input) == 0:
+                rnokbtn.config(state=DISABLED)
+                return False
+            else:
+                rnokbtn.config(state=NORMAL)
+                return True
+
+        #item = self.previeweditem
+        x = self.dw.winfo_pointerx()
+        y = self.dw.winfo_pointery()
+        absx = self.dw.winfo_pointerx() - self.dw.winfo_rootx()
+        absy = self.dw.winfo_pointery() - self.dw.winfo_rooty()
+        rnframe = Tk()
+        rnframe.title(f"OpenKeyote - Editing {item}")
+        rnframe.geometry(f"400x100+{x+50}+{y-20}")
+        namelabel = Label(rnframe, text=f"Renaming {item} to:")
+        namelabel.grid(row=2, column=0, padx=10, pady=10)
+        #rnname = Entry(rnframe, font=("Courier", 13),
+        #               highlightthickness=1,
+        #               borderwidth=1, relief="solid")
+        rnname = Text(rnframe, font=("Courier", 13),
+                            padx=10, pady=10, highlightthickness=1,
+                            borderwidth=1, relief="solid", height=1)
+        rnname.grid(row=2, column=1, sticky=E+W, padx=10, pady=10)
+        rnframe.columnconfigure(1, weight=1)
+        rnframe.rowconfigure(1, weight=1)
+        rnokbtn = ttk.Button(rnframe, text="OK", width=10, state=DISABLED)
+        rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
+        rnokbtn.config(command=lambda: self.rename_item(
+            frame=rnframe, oldname=item, newname=rnname.get()))
+        rncancelbtn = ttk.Button(rnframe, text="Cancel",
+                                 command=rnframe.destroy)
+        rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
+        rnframe.bind("<Escape>", lambda e=None: rnframe.destroy())
+        rnframe.bind("<Return>", lambda e=None: self.dw_save_item(
+            frame=rnframe, oldname=item, newname=rnname.get()))
+        rnname.focus()
+        # Tried this using lists without luck.
+        rnname.bind("<KeyRelease>", lambda a: validate_input(
+            input=rnname.get(), btn=rnokbtn))
+        rnname.bind("<Tab>", lambda a: self.focus_on(target=rnokbtn))
+        rnname.bind("<Shift-Tab>", lambda a: self.focus_on(target=rncancelbtn))
+        rnokbtn.bind("<Tab>", lambda a: self.focus_on(target=rncancelbtn))
+        rnokbtn.bind("<Shift-Tab>", lambda a: self.focus_on(target=rnname))
+        rncancelbtn.bind("<Tab>", lambda a: self.focus_on(target=rnname))
+        rncancelbtn.bind(
+            "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
+        rnframe.focus_force()
+
+    def dw_save_item(self, event=None, frame=None, oldname="", newname=""):
+        if len(newname) == 0:
+            return
+        frame.destroy()
+        self.auto_load()
+        self._filehandler.rename_item(oldname=oldname, newname=newname)
+        self._databasehandler.rename_item(oldname=oldname, newname=newname)
+        self.auto_save()
+        self.update_tree(selection=newname)
 
     def update_tree(self, selection=None, parent=None, op="", skip_refresh=False):
 
