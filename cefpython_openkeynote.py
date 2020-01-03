@@ -26,6 +26,7 @@ import sys
 import os
 import platform
 import logging as _logging
+import base64
 
 # Fix for PyCharm hints warnings
 WindowUtils = cef.WindowUtils()
@@ -42,6 +43,22 @@ logger = _logging.getLogger("tkinter_.py")
 # Tk 8.5 doesn't support png images
 IMAGE_EXT = ".png" if tk.TkVersion > 8.5 else ".gif"
 
+def html_to_data_uri(html, js_callback=None):
+    # This function is called in two ways:
+    # 1. From Python: in this case value is returned
+    # 2. From Javascript: in this case value cannot be returned because
+    #    inter-process messaging is asynchronous, so must return value
+    #    by calling js_callback.
+    html = html.encode("utf-8", "replace")
+    b64 = base64.b64encode(html).decode("utf-8", "replace")
+    ret = "data:text/html;base64,{data}".format(data=b64)
+    if js_callback:
+        js_print(js_callback.GetFrame().GetBrowser(),
+                 "Python", "html_to_data_uri",
+                 "Called from Javascript. Will call Javascript callback now.")
+        js_callback.Call(ret)
+    else:
+        return ret
 
 def main():
     logger.setLevel(_logging.INFO)
@@ -57,48 +74,57 @@ def main():
     sys.excepthook = cef.ExceptHook  # To shutdown all CEF processes on error
     root = tk.Tk()
     app = MainFrame(root)
-    app.browser = cef.CreateBrowserSync(cef.WindowInfo(),
-                                         url=r"C:\Users\mani\AppData\Local\Temp\tmp9yiyyzeq.html")
+    #app.get_browser().load_url(r"C:\Users\mani\AppData\Local\Temp\tmp9yiyyzeq.html")
+    #app.browser = cef.CreateBrowserSync(cef.WindowInfo(),
+    #                                     url=self.html_text)
+    #print(type(app))
+
 
 
     #app.set_url(r"C:\Users\mani\AppData\Local\Temp\tmp9yiyyzeq.html")
     #app.LoadUrl()
     # Tk must be initialized before CEF otherwise fatal error (Issue #306)
     cef.Initialize()
+    #app.get_browser()LoadUrl(r"C:\Users\mani\AppData\Local\Temp\tmp9yiyyzeq.html")
     app.mainloop()
     cef.Shutdown()
 
 
 class MainFrame(tk.Frame):
 
-    def __init__(self, root):
+    def __init__(self, root, url = None):
         self.browser_frame = None
         self.navigation_bar = None
+        self.url = None
 
         # Root
-        root.geometry("900x640")
+        #root.geometry("900x640")
         tk.Grid.rowconfigure(root, 0, weight=1)
         tk.Grid.columnconfigure(root, 0, weight=1)
 
         # MainFrame
         tk.Frame.__init__(self, root)
-        self.master.title("Tkinter example")
-        self.master.protocol("WM_DELETE_WINDOW", self.on_close)
-        self.master.bind("<Configure>", self.on_root_configure)
-        self.setup_icon()
+        #self.master.title("Tkinter example")
+        #self.master.protocol("WM_DELETE_WINDOW", self.on_close)
+        #self.master.bind("<Configure>", self.on_root_configure)
+        #self.setup_icon()
         self.bind("<Configure>", self.on_configure)
         self.bind("<FocusIn>", self.on_focus_in)
         self.bind("<FocusOut>", self.on_focus_out)
 
-        # NavigationBar
+        NavigationBar
         self.navigation_bar = NavigationBar(self)
         self.navigation_bar.grid(row=0, column=0,
                                  sticky=(tk.N + tk.S + tk.E + tk.W))
         tk.Grid.rowconfigure(self, 0, weight=0)
         tk.Grid.columnconfigure(self, 0, weight=0)
 
+
+
         # BrowserFrame
         self.browser_frame = BrowserFrame(self, self.navigation_bar)
+        #self.browser_frame = BrowserFrame(self)
+
         self.browser_frame.grid(row=1, column=0,
                                 sticky=(tk.N + tk.S + tk.E + tk.W))
         tk.Grid.rowconfigure(self, 1, weight=1)
@@ -106,6 +132,9 @@ class MainFrame(tk.Frame):
 
         # Pack MainFrame
         self.pack(fill=tk.BOTH, expand=tk.YES)
+
+        #self.navigation_bar.load_url(r"C:\Users\mani\AppData\Local\Temp\tmp9yiyyzeq.html")
+
 
     def on_root_configure(self, _):
         logger.debug("MainFrame.on_root_configure")
@@ -167,6 +196,7 @@ class BrowserFrame(tk.Frame):
         window_info = cef.WindowInfo()
         rect = [0, 0, self.winfo_width(), self.winfo_height()]
         window_info.SetAsChild(self.get_window_handle(), rect)
+        print(type(self))
         self.browser = cef.CreateBrowserSync(window_info,
                                              url="https://www.google.com/")
         assert self.browser
@@ -177,20 +207,6 @@ class BrowserFrame(tk.Frame):
     def get_window_handle(self):
         if self.winfo_id() > 0:
             return self.winfo_id()
-        elif MAC:
-            # On Mac window id is an invalid negative value (Issue #308).
-            # This is kind of a dirty hack to get window handle using
-            # PyObjC package. If you change structure of windows then you
-            # need to do modifications here as well.
-            # noinspection PyUnresolvedReferences
-            from AppKit import NSApp
-            # noinspection PyUnresolvedReferences
-            import objc
-            # Sometimes there is more than one window, when application
-            # didn't close cleanly last time Python displays an NSAlert
-            # window asking whether to Reopen that window.
-            # noinspection PyUnresolvedReferences
-            return objc.pyobjc_id(NSApp.windows()[-1].contentView())
         else:
             raise Exception("Couldn't obtain window handle")
 
@@ -237,6 +253,13 @@ class BrowserFrame(tk.Frame):
         # Clear browser references that you keep anywhere in your
         # code. All references must be cleared for CEF to shutdown cleanly.
         self.browser = None
+
+    def load_url(self, url=None):
+        print("attempting..")
+        if self.browser.get_browser():
+            self.browser.get_browser().StopLoad()
+            #self.master.get_browser().LoadUrl(self.url_entry.get())
+            self.browser.get_browser().LoadUrl(url)
 
 
 class LoadHandler(object):
@@ -346,6 +369,15 @@ class NavigationBar(tk.Frame):
         if self.master.get_browser():
             self.master.get_browser().StopLoad()
             self.master.get_browser().LoadUrl(self.url_entry.get())
+            #self.master.get_browser().LoadUrl(self._html_path)
+
+    def load_url(self, url=None):
+        if self.master.get_browser():
+            self.master.get_browser().StopLoad()
+            #self.master.get_browser().LoadUrl(self.url_entry.get())
+            self.master.get_browser().LoadUrl(url)
+            print(f"attempting to load url {url}")
+
 
     def on_button1(self, _):
         """Fix CEF focus issues (#255). See also FocusHandler.OnGotFocus."""

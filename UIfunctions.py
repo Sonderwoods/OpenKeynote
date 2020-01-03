@@ -15,9 +15,10 @@ from multicolumn_Listbox import Multicolumn_Listbox
 from markdown import markdown
 import pdfkit
 import tempfile
-from cefpython_openkeynote import MainFrame
-
-
+#from cefpython_openkeynote import MainFrame
+#from tkinterhtml import HtmlFrame
+#from cefpython3 import cefpython as cef
+from tk_html_widgets import HTMLLabel
 
 
 class UIfunctions():
@@ -554,7 +555,7 @@ class UIfunctions():
         self.dw = Tk() #description window
 
         self.dw.title(f"OpenKeyote - Descriptions overview")
-        self.dw.geometry(f"1300x800+{200}+{200}")
+        self.dw.geometry(f"1400x800+{700}+{200}")
 
         style = ttk.Style(self.dw)
         #font=Font(family='Arial', size=1)
@@ -654,16 +655,15 @@ class UIfunctions():
         print(self._dw_t1_rows)
 
         def update_html(input="", btn=None):
-            if self._html_path == None:
-                fd, self._html_path = tempfile.mkstemp(suffix=".html")
-            html_text = markdown(input).replace("\n","<br>")
+            #if self._html_path == None:
+            #    fd, self._html_path = tempfile.mkstemp(suffix=".html")
+            self.html_text = markdown(input).replace("\n","<br>")
+            self.dw_htmllabel.config(html=self.html_text)
 
-            html_file = open(self._html_path, 'w')
-            html_file.write(html_text)
-            html_file.close()
-            print(self._html_path)
-
-
+            #html_file = open(self._html_path, 'w')
+            #html_file.write(self.html_text)
+            #html_file.close()
+            #print(self._html_path)
 
 
             #other stuff
@@ -685,25 +685,44 @@ class UIfunctions():
                 print("pdf file locked - is it open?")
             os.chmod(pdf_path, 0o777)
             config = pdfkit.configuration(wkhtmltopdf="C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe")
-            #pdfkit.from_file('pdf_test.html','c:\\pdf_test.pdf', configuration=config)
-            #pdfkit.from_string(html_text, path, configuration=config)
-            pdfkit.from_string(html_text, pdf_path, configuration=config)
+            URL = self._html_path
+
+            #pdfkit.from_string(self.html_text, pdf_path, configuration=config)
             #except OSError:
             #    print("Error - install wkhtmltopdf")
-            print("printed html")
+
         x = self.dw.winfo_pointerx()
         y = self.dw.winfo_pointery()
         absx = self.dw.winfo_pointerx() - self.dw.winfo_rootx()
         absy = self.dw.winfo_pointery() - self.dw.winfo_rooty()
         rnframe = Tk()
         rnframe.title(f"OpenKeyote - Editing {selected_column}")
-        rnframe.geometry(f"400x400+{900}+{500}")
+        rnframe.geometry(f"900x600+{1000}+{500}")
         namelabel = Label(rnframe, text=f"Editing {selected_column} for {item}:")
         namelabel.grid(row=0, column=0, padx=10, pady=10)
+
+        htmlframe = Frame(rnframe)
+        htmlframe.grid(row=0, column=1)
+        self.dw_htmllabel = HTMLLabel(htmlframe, html="")
+        self.dw_htmllabel.pack(fill="both", expand=True)
+        self.dw_htmllabel.fit_height()
+
         rnname = Text(rnframe, font=("Courier", 13),
                             padx=10, pady=10, highlightthickness=1,
                             borderwidth=1, relief="solid", height=10)
         rnname.grid(row=1, column=0, sticky=E+W, padx=10, pady=10)
+
+
+        window_info = cef.WindowInfo()
+        rect = [50, 0, htmlframe.winfo_width(), htmlframe.winfo_height()]
+        #window_info.SetAsChild(htmlframe.winfo_id(), rect)
+        #sys.excepthook = cef.ExceptHook
+
+        #python screenshot.py https://github.com/cztomczak/cefpython 1024 5000
+        #self.browser = cef.CreateBrowserSync(window_info,
+        #                                     url="https://www.google.com/")
+        #self.browser.grid(row=3)
+        #self.dw_t1_htmlframe.grid(row=3, column=0, padx=10, pady=10)
         rnframe.columnconfigure(1, weight=1)
         rnframe.rowconfigure(1, weight=1)
         rnokbtn = ttk.Button(rnframe, text="OK", width=10, state=DISABLED)
