@@ -114,7 +114,7 @@ class DatabaseHandler():
         conn.commit()
         conn.close()
 
-    def update(self, id,title,keynote,entreprise,category):
+    def update(self, id,title,keynote,short_description,long_description,entreprise,category):
         conn=sqlite3.connect(self.DB_FILE)
         cur=conn.cursor()
         cur.execute("UPDATE keynotes_database SET title=?, keynote=?,\

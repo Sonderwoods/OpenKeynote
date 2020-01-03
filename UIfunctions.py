@@ -5,6 +5,7 @@
 # Copyright Mathias Sønderskov Nielsen 2019
 
 import os
+import tkinter as tk
 from tkinter import (ttk, Tk, filedialog, messagebox,
                      BOTH, W, S, E, N, StringVar, IntVar, Button, Frame, Label,
                      Text, Scrollbar, LabelFrame, Entry, DISABLED,
@@ -18,7 +19,11 @@ import tempfile
 #from cefpython_openkeynote import MainFrame
 #from tkinterhtml import HtmlFrame
 #from cefpython3 import cefpython as cef
+import tk_html_widgets
 from tk_html_widgets import HTMLLabel
+
+
+
 
 
 class UIfunctions():
@@ -567,17 +572,12 @@ class UIfunctions():
         self.dw.columnconfigure(0, weight=1)
 
         def on_select(data):
-            # print("called command when row is selected")
-            # print(data)
-            # print("\n")
+            # print(f"called command when row is selected {data}")
             pass
 
         self.dw_columns = ("Keynote", "Keynote Text", "Short Desc", "Long Desc", "Entreprise", "Category")
-        #self.dw_t1 = ttk.Treeview(self.dw, columns=columns[1:], style='Descriptions.Treeview')
-        #table = Tk_Table(root, ["column one","column two", "column three"], row_numbers=True, stripped_rows = ("white","#f2f2f2"), select_mode="none")
         self.dw_t1 = Multicolumn_Listbox(self.dw, self.dw_columns, style='Descriptions.Treeview', command=on_select, cell_anchor="nw")
 
-        print(self.dw_t1._columns)
         for i, col in enumerate(self.dw_columns):
             if i == 0:
                 width=70
@@ -616,23 +616,24 @@ class UIfunctions():
             self.dw_vbs.append(ttk.Button(self.dw_topframe, text=button_text))
             self.dw_vbs[a].pack(side=LEFT, fill=Y)
             self.dw_vbs[a].config(command=functions[a], width=12)
-        #self.dw.columnconfigure(0, weight=1)
-        #self.dw.columnconfigure(1, weight=1)
+
+    def print_pdf(self, html_text, target):
         """
-
-
-        rnname.bind("<KeyRelease>", lambda a: validate_input(
-            input=rnname.get(), btn=rnokbtn))
-        rnname.bind("<Tab>", lambda a: self.focus_on(target=rnokbtn))
-        rnname.bind("<Shift-Tab>", lambda a: self.focus_on(target=rncancelbtn))
-
-        rnokbtn.bind("<Tab>", lambda a: self.focus_on(target=rncancelbtn))
-        rnokbtn.bind("<Shift-Tab>", lambda a: self.focus_on(target=rnname))
-
-        rncancelbtn.bind("<Tab>", lambda a: self.focus_on(target=rnname))
-        rncancelbtn.bind(
-            "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
-        rnframe.focus_force()"""
+        not finished
+        """
+        try:
+            pdf_file = open('lol2.pdf', 'w')
+            pdf_file.write("")
+            pdf_file.close()
+            pdf_path = str(Path("lol2.pdf"))
+        except:
+            print("pdf file locked - is it open?")
+        os.chmod(pdf_path, 0o777)
+        config = pdfkit.configuration(wkhtmltopdf="C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe")
+        try:
+            pdfkit.from_string(self.html_text, pdf_path, configuration=config)
+        except OSError:
+            print("Error - install wkhtmltopdf")
 
     def dw_edit_item_dialog(self, event=None):
 
@@ -645,9 +646,6 @@ class UIfunctions():
         self._dw_t1_column = col
         self._dw_t1_rows = [item[0] for item in curItems]
         selected_column = self.dw_columns[col]
-        #cols = Multicolumn_Listbox.List_Of_Columns(self.dw_t1)
-        #print(cols)
-
         item = "[" + ', '.join(self._dw_t1_rows) + "]"
         print("column")
         print(self._dw_t1_column)
@@ -655,41 +653,9 @@ class UIfunctions():
         print(self._dw_t1_rows)
 
         def update_html(input="", btn=None):
-            #if self._html_path == None:
-            #    fd, self._html_path = tempfile.mkstemp(suffix=".html")
-            self.html_text = markdown(input).replace("\n","<br>")
-            self.dw_htmllabel.config(html=self.html_text)
-
-            #html_file = open(self._html_path, 'w')
-            #html_file.write(self.html_text)
-            #html_file.close()
-            #print(self._html_path)
-
-
-            #other stuff
-            # path = "c:/temp/out.pdf"
-            # basedir = os.path.dirname(path)
-            # if not os.path.exists(basedir):
-            #     os.makedirs(basedir)
-            #     with open(path, 'a'):
-            #         os.utime(path, None)
-            ## Function to save final PDF.. Works
-
-            try:
-                pdf_file = open('lol2.pdf', 'w')
-                pdf_file.write("")
-                pdf_file.close()
-
-                pdf_path = str(Path("lol2.pdf"))
-            except:
-                print("pdf file locked - is it open?")
-            os.chmod(pdf_path, 0o777)
-            config = pdfkit.configuration(wkhtmltopdf="C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe")
-            URL = self._html_path
-
-            #pdfkit.from_string(self.html_text, pdf_path, configuration=config)
-            #except OSError:
-            #    print("Error - install wkhtmltopdf")
+            self.html_text = markdown(input)
+            self.dw_htmllabel.set_html(self.html_text)
+            self.dw_htmllabel.fit_height()
 
         x = self.dw.winfo_pointerx()
         y = self.dw.winfo_pointery()
@@ -697,56 +663,86 @@ class UIfunctions():
         absy = self.dw.winfo_pointery() - self.dw.winfo_rooty()
         rnframe = Tk()
         rnframe.title(f"OpenKeyote - Editing {selected_column}")
-        rnframe.geometry(f"900x600+{1000}+{500}")
-        namelabel = Label(rnframe, text=f"Editing {selected_column} for {item}:")
-        namelabel.grid(row=0, column=0, padx=10, pady=10)
-
-        htmlframe = Frame(rnframe)
-        htmlframe.grid(row=0, column=1)
-        self.dw_htmllabel = HTMLLabel(htmlframe, html="")
-        self.dw_htmllabel.pack(fill="both", expand=True)
-        self.dw_htmllabel.fit_height()
-
-        rnname = Text(rnframe, font=("Courier", 13),
+        rnframe.geometry(f"900x500+{1000}+{500}")
+        #namelabel = Label(rnframe, text=f"Editing {selected_column} for {item}:")
+        #namelabel.grid(row=0, column=0, padx=10, pady=10)
+        rnname = Text(rnframe, font=("Courier", 8),
                             padx=10, pady=10, highlightthickness=1,
                             borderwidth=1, relief="solid", height=10)
         rnname.grid(row=1, column=0, sticky=E+W, padx=10, pady=10)
 
+        if len(self.dw_t1.selected_rows) == 1:
+            print(self.dw_t1.selected_rows)
+            text = self._databasehandler.search(title=self.dw_t1.selected_rows[0][0])
+            print(text)
+            rnname.delete("1.0", END)
+            rnname.insert(END, text[0][col+1])
+            rnname.focus()
+            rnname.mark_set('insert', '1.0')
 
-        window_info = cef.WindowInfo()
-        rect = [50, 0, htmlframe.winfo_width(), htmlframe.winfo_height()]
-        #window_info.SetAsChild(htmlframe.winfo_id(), rect)
-        #sys.excepthook = cef.ExceptHook
+        htmlframe = Frame(rnframe, height=500)
+        htmlframe.grid(row=2, column=0)
+        self.dw_htmllabel = HTMLLabel(htmlframe, html=markdown("#hi\nnice"))
+        #self.dw_htmllabel.grid(row=2, column=0)
+        self.dw_htmllabel.pack(fill="both", expand=True)
+        self.dw_htmllabel.fit_height()
 
-        #python screenshot.py https://github.com/cztomczak/cefpython 1024 5000
-        #self.browser = cef.CreateBrowserSync(window_info,
-        #                                     url="https://www.google.com/")
-        #self.browser.grid(row=3)
-        #self.dw_t1_htmlframe.grid(row=3, column=0, padx=10, pady=10)
         rnframe.columnconfigure(1, weight=1)
         rnframe.rowconfigure(1, weight=1)
-        rnokbtn = ttk.Button(rnframe, text="OK", width=10, state=DISABLED)
+        rnokbtn = ttk.Button(rnframe, text="OK", width=10)
         rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
-        rnokbtn.config(command=lambda: self.rename_item(
-            frame=rnframe, oldname=item, newname=rnname.get()))
+        rnokbtn.config(command=lambda: self.dw_submit(titles=self._dw_t1_rows,
+            col = self._dw_t1_column, data=rnname.get("1.0", "end-1c"), frame=rnframe))
         rncancelbtn = ttk.Button(rnframe, text="Cancel",
                                  command=rnframe.destroy)
         rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
-        rnframe.bind("<Escape>", lambda e=None: rnframe.destroy())
+        # rnframe.bind("<Escape>", lambda e=None: rnframe.destroy())
         #rnframe.bind("<Return>", lambda e=None: self.dw_save_item(
         #    frame=rnframe, oldname=item, newname=rnname.get()))
-        rnname.focus()
-        rnname.bind("<KeyRelease>", lambda e=None: update_html(rnname.get("1.0", "end-1c"), btn=rnokbtn))
-        rnname.bind("<Tab>", lambda a: self.focus_on(target=rnokbtn))
-        rnname.bind("<Shift-Tab>", lambda a: self.focus_on(target=rncancelbtn))
-        rnokbtn.bind("<Tab>", lambda a: self.focus_on(target=rncancelbtn))
-        rnokbtn.bind("<Shift-Tab>", lambda a: self.focus_on(target=rnname))
-        rncancelbtn.bind("<Tab>", lambda a: self.focus_on(target=rnname))
-        rncancelbtn.bind(
-            "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
-        rnframe.focus_force()
+        # rnname.focus()
+        rnname.bind("<KeyRelease>", lambda e=None: update_html(rnname.get("1.0", "end-1c")))
+        # rnname.bind("<Tab>", lambda a: self.focus_on(target=rnokbtn))
+        # rnname.bind("<Shift-Tab>", lambda a: self.focus_on(target=rncancelbtn))
+        # rnokbtn.bind("<Tab>", lambda a: self.focus_on(target=rncancelbtn))
+        # rnokbtn.bind("<Shift-Tab>", lambda a: self.focus_on(target=rnname))
+        # rncancelbtn.bind("<Tab>", lambda a: self.focus_on(target=rnname))
+        # rncancelbtn.bind(
+        #     "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
+        # rnframe.focus_force()
 
-    def dw_save_item(self, event=None, frame=None, oldname="", newname=""):
+    def dw_submit(self, event=None, titles=None, col = None, data=None, frame=None):
+        if len(titles) == 0:
+            return
+        frame.destroy()
+        #self.auto_load()
+        #self._filehandler.rename_item(oldname=oldname, newname=newname)
+        for title in titles:
+            lookup_lines = self._databasehandler.search(title=title)
+            for lookup_line in lookup_lines:
+                lookup_line = list(lookup_line)
+                print("\nSUBMITTING\n--")
+                print(lookup_line)
+                print(col)
+                print(f"column = {col} ... data is {lookup_line[col+1]}")
+                print(f"database ID {lookup_line[0]}")
+                lookup_line[col+1] = data
+                self._databasehandler.update(
+                    id=lookup_line[0],
+                    title=lookup_line[1],
+                    keynote=lookup_line[2],
+                    short_description=lookup_line[3],
+                    long_description=lookup_line[4],
+                    entreprise=lookup_line[5],
+                    category=lookup_line[6]
+                )
+                ## ToDO NOT DONE
+                self.dw_t1.column[1] = ["item1", "item2"]
+
+        #self._databasehandler.rename_item(oldname=oldname, newname=newname)
+        #self.auto_save()
+        #self.update_tree()
+
+    def dw_rename(self, event=None, frame=None, oldname="", newname=""):
         if len(newname) == 0:
             return
         frame.destroy()
@@ -964,6 +960,17 @@ For more info - www.github.com/sonderwoods")
         for child in children:
             children += self.get_all_children(tree, child)
         return children
+
+    def html_wrap_in_css(selv, html):
+        from inspect import getsourcefile
+        from os.path import abspath
+        cur_path = Path(abspath(getsourcefile(lambda:0)))
+        cur_folder = cur_path.parent
+        css_path = cur_folder / "assets" / "air.css"
+        with open(css_path) as file:
+            cssfile = file.read()
+        html = "<!DOCTYPE html><html><head></head><body>\n" + html + "\n</body></html>"
+        return html
 
 
 if __name__ == '__main__':
