@@ -21,6 +21,7 @@ import tempfile
 #from cefpython3 import cefpython as cef
 import tk_html_widgets
 from tk_html_widgets import HTMLLabel
+#from UI_html_window import HTMLPreview
 
 
 
@@ -498,6 +499,7 @@ class UIfunctions():
         return
 
     def categories_window(self, event=None, category=None):
+        print("todo: Categories window")
         return
 
     def dw_selectItem(self, event):
@@ -605,17 +607,27 @@ class UIfunctions():
         #self.dw_t1.bind("<ButtonRelease-1>", myfunctions)
 
         self.dw_vbs = []
-        buttons = ("Refresh", "Categories...", "Entreprises...")
-        functions = (
-            self.resfresh_dw,
-            lambda: self.categories_window(category="categories"),
-            lambda: self.categories_window(category="entreprises"),
-            )
+        # buttons = ("Refresh", "Categories...", "Entreprises...")
+        # functions = (
+        #     self.resfresh_dw,
+        #     lambda: self.categories_window(category="categories"),
+        #     lambda: self.categories_window(category="entreprises"),
+        #     )
 
-        for a, button_text in enumerate(buttons):
-            self.dw_vbs.append(ttk.Button(self.dw_topframe, text=button_text))
-            self.dw_vbs[a].pack(side=LEFT, fill=Y)
-            self.dw_vbs[a].config(command=functions[a], width=12)
+        buttons = (
+        ("Refresh",self.resfresh_dw),
+        ("*Categories...",lambda: self.categories_window(category="categories")),
+        ("Entreprises...",lambda: self.categories_window(category="entreprises")),
+        ("*Print PDF...",lambda: self.print_pdf)
+        )
+        for button, function in buttons:
+            self.dw_vbs.append(ttk.Button(self.dw_topframe, text=button))
+            self.dw_vbs[-1].pack(side=LEFT, fill=Y)
+            self.dw_vbs[-1].config(command=function, width=12)
+        # for a, button_text in enumerate(buttons):
+        #     self.dw_vbs.append(ttk.Button(self.dw_topframe, text=button_text))
+        #     self.dw_vbs[a].pack(side=LEFT, fill=Y)
+        #     self.dw_vbs[a].config(command=functions[a], width=12)
 
     def print_pdf(self, html_text, target):
         """
@@ -652,50 +664,51 @@ class UIfunctions():
         print("rows:")
         print(self._dw_t1_rows)
 
-        def update_html(input="", btn=None):
-            self.html_text = markdown(input)
-            self.dw_htmllabel.set_html(self.html_text)
-            self.dw_htmllabel.fit_height()
-
         x = self.dw.winfo_pointerx()
         y = self.dw.winfo_pointery()
         absx = self.dw.winfo_pointerx() - self.dw.winfo_rootx()
         absy = self.dw.winfo_pointery() - self.dw.winfo_rooty()
         rnframe = Tk()
         rnframe.title(f"OpenKeyote - Editing {selected_column}")
-        rnframe.geometry(f"900x500+{1000}+{500}")
+        rnframe.geometry(f"900x500+{800}+{400}")
         #namelabel = Label(rnframe, text=f"Editing {selected_column} for {item}:")
         #namelabel.grid(row=0, column=0, padx=10, pady=10)
-        rnname = Text(rnframe, font=("Courier", 8),
+        rnname = Text(rnframe, font=("Courier", 9),
                             padx=10, pady=10, highlightthickness=1,
                             borderwidth=1, relief="solid", height=10)
-        rnname.grid(row=1, column=0, sticky=E+W, padx=10, pady=10)
+        rnname.grid(row=0, column=0, sticky=N+S+E+W, padx=10, pady=10)
 
         if len(self.dw_t1.selected_rows) == 1:
             print(self.dw_t1.selected_rows)
             text = self._databasehandler.search(title=self.dw_t1.selected_rows[0][0])
-            print(text)
             rnname.delete("1.0", END)
             rnname.insert(END, text[0][col+1])
             rnname.focus()
             rnname.mark_set('insert', '1.0')
+        # BUG : MARKDOWN NOT WORKING IN THE BELOW...
+        def update_html(input="", btn=None):
+            pass
+        #     self.html_text = markdown(str(input))
+        #     self.dw_htmllabel.set_html(self.html_text)
+        #     self.dw_htmllabel.fit_height()
+        #
+        # htmlframe = Frame(rnframe, height=500)
+        # htmlframe.grid(row=2, column=0)
+        # self.dw_htmllabel = HTMLLabel(htmlframe, html=markdown(text[0][col+1]))
+        # self.dw_htmllabel.pack(fill="both", expand=True)
+        # self.dw_htmllabel.fit_height()
 
-        htmlframe = Frame(rnframe, height=500)
-        htmlframe.grid(row=2, column=0)
-        self.dw_htmllabel = HTMLLabel(htmlframe, html=markdown("#hi\nnice"))
-        #self.dw_htmllabel.grid(row=2, column=0)
-        self.dw_htmllabel.pack(fill="both", expand=True)
-        self.dw_htmllabel.fit_height()
-
-        rnframe.columnconfigure(1, weight=1)
-        rnframe.rowconfigure(1, weight=1)
-        rnokbtn = ttk.Button(rnframe, text="OK", width=10)
-        rnokbtn.grid(row=4, column=0, sticky=N+W, padx=5, pady=10)
+        rnframe.columnconfigure(0, weight=1)
+        rnframe.rowconfigure(0, weight=1)
+        botframe = Frame(rnframe, height=80)
+        botframe.grid(row=1, column=0, sticky=N+W, padx=5, pady=10)
+        rnokbtn = ttk.Button(botframe, text="OK", width=10)
+        rnokbtn.pack(side=LEFT)
         rnokbtn.config(command=lambda: self.dw_submit(titles=self._dw_t1_rows,
             col = self._dw_t1_column, data=rnname.get("1.0", "end-1c"), frame=rnframe))
-        rncancelbtn = ttk.Button(rnframe, text="Cancel",
+        rncancelbtn = ttk.Button(botframe, text="Cancel",
                                  command=rnframe.destroy)
-        rncancelbtn.grid(row=4, column=1, sticky=N+W+E, padx=5, pady=10)
+        rncancelbtn.pack(side=LEFT)
         # rnframe.bind("<Escape>", lambda e=None: rnframe.destroy())
         #rnframe.bind("<Return>", lambda e=None: self.dw_save_item(
         #    frame=rnframe, oldname=item, newname=rnname.get()))
@@ -709,6 +722,7 @@ class UIfunctions():
         # rncancelbtn.bind(
         #     "<Shift-Tab>", lambda a: self.focus_on(target=rnokbtn))
         # rnframe.focus_force()
+        rnframe.mainloop()
 
     def dw_submit(self, event=None, titles=None, col = None, data=None, frame=None):
         if len(titles) == 0:
